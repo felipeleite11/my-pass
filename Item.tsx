@@ -1,17 +1,20 @@
-import React, { useState } from 'react'
-import { StyleSheet, Text, View, TouchableOpacity, Pressable, ToastAndroid } from 'react-native'
-import { Feather } from '@expo/vector-icons'
+import React, { useContext, useState } from 'react'
+import { StyleSheet, Text, View, TouchableOpacity, Pressable, ToastAndroid, Linking } from 'react-native'
+import { Feather, MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import * as Clipboard from 'expo-clipboard'
 
 import { ItemProps, StoredPasswords } from './types'
 
+import { GlobalContext } from './contexts/GlobalContext'
+
 export const Item = ({ item, reload }: ItemProps) => {
-	const [visible, setVisible] = useState(false)
+	const { handleToggleVisibility } = useContext(GlobalContext)
+	
 	const [showConfirmDelete, setShowConfirmDelete] = useState(false)
 
-	function handlePress() {
-		setVisible(!visible)
+	function handlePress(id: number) {		
+		handleToggleVisibility(id)
 	}
 
 	function handleConfirmDelete() {
@@ -40,25 +43,38 @@ export const Item = ({ item, reload }: ItemProps) => {
 		ToastAndroid.show('Copiado para área de transferência.', ToastAndroid.SHORT)
 	}
 
+	function handleOpenLink(link: string) {
+		const hasProtocol = /^(http(s)?:\/\/)/g.test(link)
+		
+		if(!hasProtocol) {
+			link = `https://${link}`
+		}
+
+		Linking.openURL(link)
+	}
+
 	return (
 		<Pressable
 			style={{...styles.item, backgroundColor: showConfirmDelete ? '#ef9a9a' : 'transparent'}}
-			onPress={handlePress}
+			onPress={() => { handlePress(item.id) }}
 			onLongPress={handleConfirmDelete}
 		>
 			<View style={styles.header}>
-				<Text style={styles.title}>{item.title}</Text>
+				<Text style={{
+					...styles.title,
+					...(item.visible ? styles.visibleTitle : {})
+				}}>{item.title}</Text>
 
 				{showConfirmDelete ? (
 					<TouchableOpacity onPress={() => { handleDelete(item.id) }}>
 						<Feather name="trash" size={24} />
 					</TouchableOpacity>
 				) : (
-					<Feather name={visible ? 'eye-off' : 'eye'} size={24} />
+					<Feather name={item.visible ? 'eye-off' : 'eye'} size={24} />
 				)}
 			</View>
 
-			{visible && (
+			{item.visible && (
 				<>
 					<View style={styles.dataRow}>
 						<Feather name="user" size={24} />
@@ -83,6 +99,31 @@ export const Item = ({ item, reload }: ItemProps) => {
 							<Feather name="copy" size={26} style={styles.copyIcon} />
 						</TouchableOpacity>
 					</View>
+
+					<View style={styles.dataRow}>
+						<Feather name="link" size={24} />
+
+						<View style={styles.hidedDataBox}>
+							<Text style={styles.hidedData}>{item.link}</Text>
+						</View>
+
+						<TouchableOpacity onPress={() => { handleOpenLink(item.link) }}>
+							<Feather name="external-link" size={26} style={styles.copyIcon} />
+						</TouchableOpacity>
+					</View>
+
+					<View style={styles.dataRow}>
+						<MaterialIcons name="sms" size={24} />
+
+						<View style={{
+							...styles.hidedDataBox,
+							...styles.hidedDataBoxWithoutBorder
+						}}>
+							<Text style={styles.hidedData}>
+								{`2FA habilitado: ${item['2fa'] ? 'Sim' : 'Não'}`}
+							</Text>
+						</View>
+					</View>
 				</>
 			)}
 		</Pressable>
@@ -101,21 +142,30 @@ const styles = StyleSheet.create({
 	title: {
 		fontSize: 20
 	},
+	visibleTitle: {
+		fontSize: 26,
+		fontWeight: 'bold',
+		marginBottom: 10
+	},
 	dataRow: {
 		flexDirection: 'row',
 		alignItems: 'center'
 	},
 	hidedDataBox: {
 		marginTop: 4,
-		backgroundColor: '#03a9f4',
+		backgroundColor: 'transparent',
+		borderWidth: 1,
 		padding: 8,
 		borderRadius: 6,
 		width: '79%',
 		marginLeft: 10
 	},
+	hidedDataBoxWithoutBorder: {
+		borderWidth: 0
+	},
 	hidedData: {
-		fontSize: 20,
-		color: '#FFF'
+		fontSize: 18,
+		color: '#424242'
 	},
 	copyIcon: {
 		marginLeft: 10

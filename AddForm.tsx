@@ -1,7 +1,10 @@
-import { useState } from "react"
-import { StyleSheet, TextInput, TouchableOpacity, View, Text, ToastAndroid } from "react-native"
-import { Feather } from "@expo/vector-icons"
+import { useState } from 'react'
+import { StyleSheet, TextInput, TouchableOpacity, View, Text, ToastAndroid } from 'react-native'
+import { Feather } from '@expo/vector-icons'
+import Checkbox from 'expo-checkbox'
 import AsyncStorage from '@react-native-async-storage/async-storage'
+
+import { ModalHeader } from './ModalHeader'
 
 import { StoredPasswords, AddFormProps} from './types'
 
@@ -10,6 +13,8 @@ export const AddForm = ({ handleCloseAddForm, reload }: AddFormProps) => {
 	const [appTitle, setAppTitle] = useState('')
 	const [appUsername, setAppUsername] = useState('')
 	const [appPassword, setAppPassword] = useState('')
+	const [appLink, setAppLink] = useState('')
+	const [app2FA, setApp2FA] = useState(false)
 
 	async function handleAdd() {
 		try {
@@ -31,7 +36,10 @@ export const AddForm = ({ handleCloseAddForm, reload }: AddFormProps) => {
 				id: lastId + 1,
 				title: appTitle,
 				password: appPassword,
-				username: appUsername
+				username: appUsername,
+				link: appLink,
+				'2fa': app2FA,
+				visible: false
 			})
 
 			currentPasswordsString = JSON.stringify(currentPasswords)
@@ -49,55 +57,68 @@ export const AddForm = ({ handleCloseAddForm, reload }: AddFormProps) => {
 	}
 
 	return (
-		<>
-			<View style={styles.addFormHeader}>
-				<Text style={styles.addFormHeaderTitle}>Adicionar senha</Text>
+		<View style={styles.addFormContainer}>
+			<ModalHeader 
+				title="Adicionar senha"
+				handleClose={handleCloseAddForm}
+			/>
 
-				<TouchableOpacity onPress={handleCloseAddForm}>
-					<Feather name="x" size={30} />
-				</TouchableOpacity>
-			</View>
+			<TextInput 
+				onChangeText={setAppTitle}
+				value={appTitle}
+				style={styles.inputText}
+				placeholder="Nome do serviço (ex.: GMail, Nubank)"
+				visible-password={showPassword}
+			/>
 
-			<View style={styles.addFormContainer}>
+			<TextInput 
+				onChangeText={setAppLink}
+				value={appLink}
+				style={styles.inputText}
+				placeholder="Link de acesso"
+			/>
+
+			<TextInput 
+				onChangeText={setAppUsername}
+				value={appUsername}
+				style={styles.inputText}
+				placeholder="E-mail ou nome de usuário"
+				keyboardType="email-address"
+			/>
+	
+			<View style={styles.passwordContainer}>
 				<TextInput 
-					onChangeText={setAppTitle}
-					value={appTitle}
-					style={styles.inputText}
-					placeholder="Nome do serviço (ex.: GMail, Nubank)"
-					visible-password={showPassword}
+					onChangeText={setAppPassword}
+					value={appPassword}
+					style={{
+						...styles.inputText,
+						...styles.inputTextPassword
+					}}
+					placeholder="Senha"
+					secureTextEntry={!showPassword}
 				/>
 
-				<TextInput 
-					onChangeText={setAppUsername}
-					value={appUsername}
-					style={styles.inputText}
-					placeholder="E-mail ou nome de usuário"
-					keyboardType="email-address"
-				/>
-		
-				<View style={styles.passwordContainer}>
-					<TextInput 
-						onChangeText={setAppPassword}
-						value={appPassword}
-						style={{
-							...styles.inputText,
-							...styles.inputTextPassword
-						}}
-						placeholder="Senha"
-						secureTextEntry={!showPassword}
-					/>
-
-					<TouchableOpacity onPress={() => { setShowPassword(!showPassword) }}>
+				<TouchableOpacity onPress={() => { setShowPassword(!showPassword) }}>
 					<Feather name={showPassword ? 'eye-off' : 'eye'} size={30} style={styles.togglePasswordVisibilityIcon} />
-					</TouchableOpacity>
-				</View>
-
-				<TouchableOpacity style={styles.btnSave} onPress={handleAdd}>
-					<Feather name="save" size={24} />
-					<Text style={styles.btnSaveText}>Salvar senha</Text>
 				</TouchableOpacity>
 			</View>
-		</>
+
+			<View style={styles.check2FAContainer}>
+				<Checkbox
+					value={app2FA}
+					onValueChange={setApp2FA}
+					color={app2FA ? '#4630EB' : undefined}
+					style={styles.check2faCheckbox}
+				/>
+
+				<Text style={styles.check2FAText}>2FA habilitado?</Text>
+			</View>
+
+			<TouchableOpacity style={styles.btnSave} onPress={handleAdd}>
+				<Feather name="save" size={24} />
+				<Text style={styles.btnSaveText}>Salvar senha</Text>
+			</TouchableOpacity>
+		</View>
 	)
 }
 
@@ -136,14 +157,6 @@ const styles = StyleSheet.create({
 	  shadowRadius: 15 ,
 	  shadowOffset : { width: 1, height: 13}
 	},
-	addFormHeaderTitle: {
-	  fontSize: 24
-	},
-	addFormHeader: {
-	  flexDirection: 'row',
-	  justifyContent: 'space-between',
-	  padding: 20
-	},
 	addFormContainer: {
 	  padding: 20
 	},
@@ -166,6 +179,19 @@ const styles = StyleSheet.create({
 	},
 	inputTextPassword: {
 	  width: '88%'
+	},
+	check2FAContainer: {
+		alignItems: 'center',
+		flexDirection: 'row',
+		marginBottom: 20
+	},
+	check2faCheckbox: {
+		height: 24,
+		width: 24
+	},
+	check2FAText: {
+		fontSize: 16,
+		marginLeft: 10
 	},
 	btnSave: {
 	  flexDirection: 'row',
