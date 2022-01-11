@@ -136,7 +136,7 @@ export const List = () => {
 							...styles.confirmClearButtonNo
 						}}
 					>
-						<Text>Excluir todas as senhas</Text>
+						<Text style={styles.optionsButtonText}>Excluir todas as senhas</Text>
 					</TouchableOpacity>
 
 					<TouchableOpacity 
@@ -146,7 +146,7 @@ export const List = () => {
 							...styles.confirmClearButtonYes
 						}}
 					>
-						<Text>Esconder todas as senhas</Text>
+						<Text style={styles.optionsButtonText}>Esconder todas as senhas</Text>
 					</TouchableOpacity>
 				</View>
 			</Modal>
@@ -273,6 +273,9 @@ const styles = StyleSheet.create({
 	},
 	optionsContainer: {
 		padding: 20
+	},
+	optionsButtonText: {
+		fontSize: 16
 	}
   })
   

@@ -1,10 +1,10 @@
 import React, { useContext, useState } from 'react'
 import { StyleSheet, Text, View, TouchableOpacity, Pressable, ToastAndroid, Linking } from 'react-native'
-import { Feather, MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons'
+import { Feather, MaterialIcons, FontAwesome } from '@expo/vector-icons'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import * as Clipboard from 'expo-clipboard'
 
-import { ItemProps, StoredPasswords } from './types'
+import { ItemProps, StoredPasswords, PasswordTypes } from './types'
 
 import { GlobalContext } from './contexts/GlobalContext'
 
@@ -70,60 +70,80 @@ export const Item = ({ item, reload }: ItemProps) => {
 						<Feather name="trash" size={24} />
 					</TouchableOpacity>
 				) : (
-					<Feather name={item.visible ? 'eye-off' : 'eye'} size={24} />
+					<Feather name={item.visible ? 'eye-off' : 'eye'} size={22} />
 				)}
 			</View>
 
 			{item.visible && (
 				<>
-					<View style={styles.dataRow}>
-						<Feather name="user" size={24} />
+					{!!item.link && (
+						<View style={styles.dataRow}>
+							<Feather name="link" size={20} />
 
-						<View style={styles.hidedDataBox}>
-							<Text style={styles.hidedData}>{item.username}</Text>
+							<View style={styles.hidedDataBox}>
+								<Text style={styles.hidedData}>{item.link}</Text>
+							</View>
+
+							<TouchableOpacity onPress={() => { handleOpenLink(item.link) }}>
+								<Feather name="external-link" size={26} style={styles.copyIcon} />
+							</TouchableOpacity>
 						</View>
+					)}
 
-						<TouchableOpacity onPress={() => { handleCopyToClipboard(item.username) }}>
-							<Feather name="copy" size={26} style={styles.copyIcon} />
-						</TouchableOpacity>
-					</View>
+					{!!item.port && (
+						<View style={styles.dataRow}>
+							<FontAwesome name="sign-in" size={22} style={{ paddingRight: 1 }} />
+
+							<View style={styles.hidedDataBox}>
+								<Text style={styles.hidedData}>{item.port}</Text>
+							</View>
+
+							<TouchableOpacity onPress={() => { handleCopyToClipboard(item.port) }}>
+								<Feather name="copy" size={24} style={styles.copyIcon} />
+							</TouchableOpacity>
+						</View>
+					)}
+
+					{!!item.username && (
+						<View style={styles.dataRow}>
+							<Feather name="user" size={20} />
+
+							<View style={styles.hidedDataBox}>
+								<Text style={styles.hidedData}>{item.username}</Text>
+							</View>
+
+							<TouchableOpacity onPress={() => { handleCopyToClipboard(item.username) }}>
+								<Feather name="copy" size={24} style={styles.copyIcon} />
+							</TouchableOpacity>
+						</View>
+					)} 
 
 					<View style={styles.dataRow}>
-						<Feather name="lock" size={24} />
+						<Feather name="lock" size={20} />
 
 						<View style={styles.hidedDataBox}>
 							<Text style={styles.hidedData}>{item.password}</Text>
 						</View>
 
 						<TouchableOpacity onPress={() => { handleCopyToClipboard(item.password) }}>
-							<Feather name="copy" size={26} style={styles.copyIcon} />
+							<Feather name="copy" size={24} style={styles.copyIcon} />
 						</TouchableOpacity>
 					</View>
 
-					<View style={styles.dataRow}>
-						<Feather name="link" size={24} />
+					{item['2fa'] !== undefined && (
+						<View style={styles.dataRow}>
+							<MaterialIcons name="sms" size={24} />
 
-						<View style={styles.hidedDataBox}>
-							<Text style={styles.hidedData}>{item.link}</Text>
+							<View style={{
+								...styles.hidedDataBox,
+								...styles.hidedDataBoxWithoutBorder
+							}}>
+								<Text style={styles.hidedData}>
+									{`2FA habilitado: ${item['2fa'] ? 'Sim' : 'Não'}`}
+								</Text>
+							</View>
 						</View>
-
-						<TouchableOpacity onPress={() => { handleOpenLink(item.link) }}>
-							<Feather name="external-link" size={26} style={styles.copyIcon} />
-						</TouchableOpacity>
-					</View>
-
-					<View style={styles.dataRow}>
-						<MaterialIcons name="sms" size={24} />
-
-						<View style={{
-							...styles.hidedDataBox,
-							...styles.hidedDataBoxWithoutBorder
-						}}>
-							<Text style={styles.hidedData}>
-								{`2FA habilitado: ${item['2fa'] ? 'Sim' : 'Não'}`}
-							</Text>
-						</View>
-					</View>
+					)}
 				</>
 			)}
 		</Pressable>
@@ -132,7 +152,7 @@ export const Item = ({ item, reload }: ItemProps) => {
 
 const styles = StyleSheet.create({
 	item: {
-		padding: 14,
+		padding: 12,
 		borderBottomWidth: 1
 	},
 	header: {
@@ -140,10 +160,10 @@ const styles = StyleSheet.create({
 		justifyContent: 'space-between'
 	},
 	title: {
-		fontSize: 20
+		fontSize: 16
 	},
 	visibleTitle: {
-		fontSize: 26,
+		fontSize: 20,
 		fontWeight: 'bold',
 		marginBottom: 10
 	},
@@ -164,7 +184,7 @@ const styles = StyleSheet.create({
 		borderWidth: 0
 	},
 	hidedData: {
-		fontSize: 18,
+		fontSize: 14,
 		color: '#424242'
 	},
 	copyIcon: {

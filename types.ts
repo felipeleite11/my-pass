@@ -15,11 +15,13 @@ export interface ContextProps {
 
 export interface StoredPassword {
 	id: number
+	type: string
 	title: string
 	password: string
 	username: string
 	link: string
 	'2fa': boolean
+	port: string
 	visible: boolean
 }
 
@@ -50,4 +52,11 @@ export interface AddFormProps {
 export interface ModalHeaderProps {
 	title: string
 	handleClose(): void
+}
+
+export enum PasswordTypes {
+	LOGIN_PASSWORD = 'Login e senha',
+	PASSWORD_ONLY = 'Apenas senha',
+	SSH = 'SSH',
+	FTP = 'FTP'
 }
