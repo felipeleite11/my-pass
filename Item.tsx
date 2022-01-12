@@ -1,20 +1,24 @@
 import React, { useContext, useState } from 'react'
-import { StyleSheet, Text, View, TouchableOpacity, Pressable, ToastAndroid, Linking } from 'react-native'
+import { StyleSheet, Text, View, TouchableOpacity, Pressable, ToastAndroid, Linking, Image } from 'react-native'
 import { Feather, MaterialIcons, FontAwesome } from '@expo/vector-icons'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import * as Clipboard from 'expo-clipboard'
 
-import { ItemProps, StoredPasswords, PasswordTypes } from './types'
+import { ItemProps, StoredPasswords, StoredPassword } from './types'
 
 import { GlobalContext } from './contexts/GlobalContext'
 
 export const Item = ({ item, reload }: ItemProps) => {
-	const { handleToggleVisibility } = useContext(GlobalContext)
+	const { handleToggleVisibility, fingerprintProtectState, handleFingerprintAuthentication } = useContext(GlobalContext)
 	
 	const [showConfirmDelete, setShowConfirmDelete] = useState(false)
 
-	function handlePress(id: number) {		
-		handleToggleVisibility(id)
+	function handlePress(item: StoredPassword) {
+		if(fingerprintProtectState && !item.visible) {
+			handleFingerprintAuthentication()
+		}
+		
+		handleToggleVisibility(item.id)
 	}
 
 	function handleConfirmDelete() {
@@ -55,22 +59,39 @@ export const Item = ({ item, reload }: ItemProps) => {
 
 	return (
 		<Pressable
-			style={{...styles.item, backgroundColor: showConfirmDelete ? '#ef9a9a' : 'transparent'}}
-			onPress={() => { handlePress(item.id) }}
+			style={{...styles.item, backgroundColor: showConfirmDelete ? '#421212' : item.visible ? '#38304D' : 'transparent'}}
+			onPress={() => { handlePress(item) }}
 			onLongPress={handleConfirmDelete}
 		>
 			<View style={styles.header}>
-				<Text style={{
-					...styles.title,
-					...(item.visible ? styles.visibleTitle : {})
-				}}>{item.title}</Text>
+				<View style={styles.appTitle}>
+					{item.link ? (
+						<Image 
+							source={{
+								uri: `https://s2.googleusercontent.com/s2/favicons?domain_url=https://${item.link}`
+							}}
+							style={styles.appLogoImage}
+						/>
+					) : (
+						<View style={styles.appLogoImagePlaceholder} />
+					)}
+
+					<Text 
+						style={{
+							...styles.title,
+							...(item.visible ? styles.visibleTitle : {})
+						}}
+					>
+						{item.title}
+					</Text>
+				</View>
 
 				{showConfirmDelete ? (
 					<TouchableOpacity onPress={() => { handleDelete(item.id) }}>
-						<Feather name="trash" size={24} />
+						<Feather name="trash" size={24} color="#FFF" />
 					</TouchableOpacity>
 				) : (
-					<Feather name={item.visible ? 'eye-off' : 'eye'} size={22} />
+					<Feather name={item.visible ? 'eye-off' : 'eye'} size={22} color="#FFF" />
 				)}
 			</View>
 
@@ -78,61 +99,68 @@ export const Item = ({ item, reload }: ItemProps) => {
 				<>
 					{!!item.link && (
 						<View style={styles.dataRow}>
-							<Feather name="link" size={20} />
+							<Feather name="link" size={20} color="#FFF" />
 
 							<View style={styles.hidedDataBox}>
 								<Text style={styles.hidedData}>{item.link}</Text>
+
+								<Image 
+									source={{
+										uri: `https://s2.googleusercontent.com/s2/favicons?domain_url=https://${item.link}`
+									}}
+									style={styles.linkLogoImage}
+								/>
 							</View>
 
 							<TouchableOpacity onPress={() => { handleOpenLink(item.link) }}>
-								<Feather name="external-link" size={26} style={styles.copyIcon} />
+								<Feather name="external-link" size={26} style={styles.copyIcon} color="#FFF" />
 							</TouchableOpacity>
 						</View>
 					)}
 
 					{!!item.port && (
 						<View style={styles.dataRow}>
-							<FontAwesome name="sign-in" size={22} style={{ paddingRight: 1 }} />
+							<FontAwesome name="sign-in" size={22} style={{ paddingRight: 1 }} color="#FFF" />
 
 							<View style={styles.hidedDataBox}>
 								<Text style={styles.hidedData}>{item.port}</Text>
 							</View>
 
 							<TouchableOpacity onPress={() => { handleCopyToClipboard(item.port) }}>
-								<Feather name="copy" size={24} style={styles.copyIcon} />
+								<Feather name="copy" size={24} style={styles.copyIcon} color="#FFF" />
 							</TouchableOpacity>
 						</View>
 					)}
 
 					{!!item.username && (
 						<View style={styles.dataRow}>
-							<Feather name="user" size={20} />
+							<Feather name="user" size={20} color="#FFF" />
 
 							<View style={styles.hidedDataBox}>
 								<Text style={styles.hidedData}>{item.username}</Text>
 							</View>
 
 							<TouchableOpacity onPress={() => { handleCopyToClipboard(item.username) }}>
-								<Feather name="copy" size={24} style={styles.copyIcon} />
+								<Feather name="copy" size={24} style={styles.copyIcon} color="#FFF" />
 							</TouchableOpacity>
 						</View>
 					)} 
 
 					<View style={styles.dataRow}>
-						<Feather name="lock" size={20} />
+						<Feather name="lock" size={20} color="#FFF" />
 
 						<View style={styles.hidedDataBox}>
 							<Text style={styles.hidedData}>{item.password}</Text>
 						</View>
 
 						<TouchableOpacity onPress={() => { handleCopyToClipboard(item.password) }}>
-							<Feather name="copy" size={24} style={styles.copyIcon} />
+							<Feather name="copy" size={24} style={styles.copyIcon} color="#FFF" />
 						</TouchableOpacity>
 					</View>
 
 					{item['2fa'] !== undefined && (
 						<View style={styles.dataRow}>
-							<MaterialIcons name="sms" size={24} />
+							<MaterialIcons name="sms" size={24} color="#FFF" />
 
 							<View style={{
 								...styles.hidedDataBox,
@@ -153,14 +181,29 @@ export const Item = ({ item, reload }: ItemProps) => {
 const styles = StyleSheet.create({
 	item: {
 		padding: 12,
-		borderBottomWidth: 1
+		borderBottomWidth: 1,
+		borderBottomColor: '#FFF'
 	},
 	header: {
 		flexDirection: 'row',
 		justifyContent: 'space-between'
 	},
+	appTitle: {
+		flexDirection: 'row'
+	},
+	appLogoImage: {
+		width: 22,
+		height: 22,
+		borderRadius: 2,
+		marginRight: 8
+	},
+	appLogoImagePlaceholder: {
+		width: 30
+	},
 	title: {
-		fontSize: 16
+		fontSize: 16,
+		marginLeft: 2,
+		color: '#FFF'
 	},
 	visibleTitle: {
 		fontSize: 20,
@@ -175,20 +218,29 @@ const styles = StyleSheet.create({
 		marginTop: 4,
 		backgroundColor: 'transparent',
 		borderWidth: 1,
+		borderColor: '#FFF',
 		padding: 8,
 		borderRadius: 6,
 		width: '79%',
-		marginLeft: 10
+		marginLeft: 10,
+		flexDirection: 'row',
+		justifyContent: 'space-between'
 	},
 	hidedDataBoxWithoutBorder: {
 		borderWidth: 0
 	},
 	hidedData: {
 		fontSize: 14,
-		color: '#424242'
+		color: '#FFF'
 	},
 	copyIcon: {
 		marginLeft: 10
+	},
+	linkLogoImage: {
+		width: 18,
+		height: 18,
+		borderRadius: 2,
+		position: 'relative'
 	}
 })
   

@@ -42,6 +42,11 @@ export interface GlobalContextProps {
 	handleClearPasswords(): void
 	hideAllPasswords(): void,
 	setShowOptions: React.Dispatch<React.SetStateAction<boolean>>
+	fingerprintProtectState: boolean|null
+	handleToggleFingerprintProtect(): void
+	handleFingerprintAuthentication(): void
+	showFingerprintModal: boolean
+	// theme: string
 }
 
 export interface AddFormProps {

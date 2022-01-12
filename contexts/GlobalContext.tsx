@@ -1,16 +1,50 @@
 import React, { createContext, useEffect, useState } from 'react'
+import { StyleSheet, Modal, Text, ToastAndroid, TouchableOpacity, View } from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage'
+import * as LocalAuthentication from 'expo-local-authentication'
 
-import { GlobalContextProps, ContextProps, StoredPasswords, StoredPassword } from '../types'
-import { ToastAndroid } from 'react-native'
+import { GlobalContextProps, ContextProps, StoredPasswords, StoredPassword } from '../types'  
+import { Ionicons } from '@expo/vector-icons'
 
 export const GlobalContext = createContext<GlobalContextProps>({} as any)
 
 export default function({ children }: ContextProps) {
-	const [showAddForm, setShowAddForm] = useState(false)
+	const [showAddForm, setShowAddForm] = useState<boolean>(false)
 	const [passwordList, setPasswordList] = useState<StoredPasswords>([])
-	const [showOptions, setShowOptions] = useState(false)
-	const [showConfirmClear, setShowConfirmClear] = useState(false)
+	const [showOptions, setShowOptions] = useState<boolean>(false)
+	const [showConfirmClear, setShowConfirmClear] = useState<boolean>(false)
+	const [fingerprintProtectState, setFingerprintProtectState] = useState<boolean|null>(null)
+	const [showFingerprintModal, setShowFingerprintModal] = useState<boolean>(true)
+	// const [theme, setTheme] = useState<'dark'|'light'>('dark')
+
+	// async function loadTheme() {
+	// 	const themeName = (await AsyncStorage.getItem('@my_pass_theme')) || 'dark'
+
+	// 	setTheme(themeName as 'light'|'dark')
+	// }
+
+	async function handleFingerprintAuthentication(login = false) {
+		setShowFingerprintModal(true)
+
+		// const fingerprintSupported = await LocalAuthentication.authenticateAsync()
+
+		// const availableFingerprints = await LocalAuthentication.isEnrolledAsync()
+
+		// if(!fingerprintSupported || !availableFingerprints) {
+		// 	await LocalAuthentication.cancelAuthenticate()
+		// }
+
+		const authResult = await LocalAuthentication.authenticateAsync({
+			promptMessage: login ? 'Login com impressão digital' : 'Confirme sua identidade',
+			cancelLabel: 'Cancelar'
+		})
+
+		if(authResult.success) {
+			setShowFingerprintModal(false)	
+		} else {
+			alert('Falha na autenticação.')
+		}
+	}
 
 	async function loadPasswordList() {
 		const currentPasswordsString = await AsyncStorage.getItem('@my_pass_passwords')
@@ -95,8 +129,35 @@ export default function({ children }: ContextProps) {
 		setShowOptions(false)
 	}
 
+	async function loadFingerprintProtectState() {
+		const finterprintProtect = await AsyncStorage.getItem('@my_pass_enable_fingerprint_protect')
+
+		setFingerprintProtectState(finterprintProtect === 'Y')
+	}
+
+	async function handleToggleFingerprintProtect() {
+		const finterprintProtect = await AsyncStorage.getItem('@my_pass_enable_fingerprint_protect')
+
+		const fingerprintProtectEnabled = finterprintProtect === 'Y'
+		const updatedState = fingerprintProtectEnabled ? 'N' : 'Y'
+
+		await AsyncStorage.setItem('@my_pass_enable_fingerprint_protect', updatedState)
+
+		setFingerprintProtectState(updatedState === 'Y')
+	}
+
+	function handleContinueWithoutFingerprint() {
+		setShowFingerprintModal(false)
+	}
+
 	useEffect(() => {
+		// loadTheme()
+
+		handleFingerprintAuthentication(true)
+
 		loadPasswordList()
+		
+		loadFingerprintProtectState()
 	}, [])
 
 	useEffect(() => {
@@ -108,6 +169,7 @@ export default function({ children }: ContextProps) {
 	return (
 		<GlobalContext.Provider 
 			value={{
+				handleFingerprintAuthentication,
 				passwords: passwordList,
 				setPasswords: setPasswordList,
 				showAddForm,
@@ -121,10 +183,49 @@ export default function({ children }: ContextProps) {
 				handleConfirmClearPasswords,
 				handleClearPasswords,
 				hideAllPasswords,
-				setShowOptions
+				setShowOptions,
+				fingerprintProtectState,
+				handleToggleFingerprintProtect,
+				showFingerprintModal
 			}}
 		>
 			{children}
+
+			<Modal
+				visible={showFingerprintModal}
+				animationType="slide"
+				onRequestClose={() => { setShowFingerprintModal(false) }}
+			>
+				<View style={styles.fingerprintContainer}>
+					<Text style={styles.fingerprintText}>Acesse com sua impressão digital</Text>
+
+					<Ionicons name="finger-print" size={60} style={styles.fingerprintIcon} color="#FFF" />
+
+					<TouchableOpacity onPress={handleContinueWithoutFingerprint}>
+						<Text style={styles.fingerprintContinueButton}>Pular autenticação</Text>
+					</TouchableOpacity>
+				</View>
+			</Modal>
+
 		</GlobalContext.Provider>
 	)
 }
+
+const styles = StyleSheet.create({
+	fingerprintContainer: {
+		alignItems: 'center',
+		justifyContent: 'center',
+		flex: 1,
+		backgroundColor: '#201A30'
+	},
+	fingerprintText: {
+		fontSize: 20,
+		color: '#FFF'
+	},
+	fingerprintIcon: {
+		marginVertical: 50
+	},
+	fingerprintContinueButton: {
+		color: '#FFF'
+	}
+})

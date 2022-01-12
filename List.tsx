@@ -21,7 +21,9 @@ export const List = () => {
 		handleClearPasswords,
 		hideAllPasswords,
 		showOptions,
-		setShowOptions
+		setShowOptions,
+		fingerprintProtectState,
+		handleToggleFingerprintProtect
 	} = useContext(GlobalContext)
 
 	function alertEmptyList() {
@@ -34,7 +36,7 @@ export const List = () => {
 				<Text style={styles.appTitle}>Minhas senhas</Text>
 
 				<TouchableOpacity onPress={() => { setShowOptions(true) }}>
-					<Feather name="more-vertical" size={28} />
+					<Feather name="more-vertical" size={28} color="#FFF" />
 				</TouchableOpacity>
 			</View>
 
@@ -65,7 +67,7 @@ export const List = () => {
 					<Feather name="plus" size={30} />
 				</View>
 			</TouchableOpacity>
-
+			
 			<Modal
 				animationType="slide"
 				visible={showAddForm}
@@ -75,6 +77,53 @@ export const List = () => {
 					handleCloseAddForm={handleCloseAddForm}
 					reload={loadPasswordList}
 				/>
+			</Modal>
+
+			<Modal
+				animationType="slide"
+				visible={showOptions}
+				onRequestClose={() => { setShowOptions(false) }}
+			>
+				<View style={styles.optionsContainer}>
+					<ModalHeader 
+						title="Opções"
+						handleClose={() => { setShowOptions(false) }}
+					/>
+
+					<TouchableOpacity 
+						onPress={passwords.length ? handleConfirmClearPasswords : alertEmptyList}
+						style={{
+							...styles.confirmClearButton,
+							...styles.confirmClearButtonNo
+						}}
+					>
+						<Text style={styles.removeAllButtonText}>Excluir todas as senhas</Text>
+					</TouchableOpacity>
+
+					<TouchableOpacity 
+						onPress={hideAllPasswords}
+						style={{
+							...styles.confirmClearButton,
+							...styles.confirmClearButtonYes
+						}}
+					>
+						<Text style={styles.hideAllButtonText}>Esconder todas as senhas</Text>
+					</TouchableOpacity>
+
+					<TouchableOpacity 
+						onPress={handleToggleFingerprintProtect}
+						style={{
+							...styles.confirmClearButton,
+							backgroundColor: '#f7fa5a'
+						}}
+					>
+						<Text style={styles.fingerprintProtectButtonText}>Proteger senhas com digital</Text>
+
+						<Text style={styles.fingerprintProtectButtonTextTip}>
+							{fingerprintProtectState !== null ? fingerprintProtectState ? 'Habilitado' : 'Desabilitado' : ''}
+						</Text>
+					</TouchableOpacity>
+				</View>
 			</Modal>
 
 			<Modal
@@ -117,46 +166,15 @@ export const List = () => {
 					</View>
 				</View>
 			</Modal>
-
-			<Modal
-				animationType="slide"
-				visible={showOptions}
-				onRequestClose={() => { setShowOptions(false) }}
-			>
-				<View style={styles.optionsContainer}>
-					<ModalHeader 
-						title="Opções"
-						handleClose={() => { setShowOptions(false) }}
-					/>
-
-					<TouchableOpacity 
-						onPress={passwords.length ? handleConfirmClearPasswords : alertEmptyList}
-						style={{
-							...styles.confirmClearButton,
-							...styles.confirmClearButtonNo
-						}}
-					>
-						<Text style={styles.optionsButtonText}>Excluir todas as senhas</Text>
-					</TouchableOpacity>
-
-					<TouchableOpacity 
-						onPress={hideAllPasswords}
-						style={{
-							...styles.confirmClearButton,
-							...styles.confirmClearButtonYes
-						}}
-					>
-						<Text style={styles.optionsButtonText}>Esconder todas as senhas</Text>
-					</TouchableOpacity>
-				</View>
-			</Modal>
 		</>
 	)
 }
 
 const styles = StyleSheet.create({
 	appTitle: {
-		fontSize: 26
+		fontSize: 26,
+		color: '#FFF'
+		// color: themes[theme as 'dark'|'light'].PRIMARY
 	}, 
 	header: {
 		position: 'absolute',
@@ -165,6 +183,7 @@ const styles = StyleSheet.create({
 		justifyContent: 'space-between',
 		width: '100%',
 		paddingHorizontal: 20
+		// backgroundColor: themes[theme as 'dark'|'light'].BACKGROUND
 	},
 	content: {
 	  flex: 1,
@@ -189,7 +208,7 @@ const styles = StyleSheet.create({
 	  position: 'absolute'
 	},
 	fab: {
-	  backgroundColor: 'gold',
+	  backgroundColor: '#0df5e3',
 	  width: 60,
 	  height: 60,
 	  borderRadius: 30,
@@ -266,16 +285,27 @@ const styles = StyleSheet.create({
 		alignItems: 'center'
 	},
 	confirmClearButtonNo: {
-		backgroundColor: '#e57373'
+		backgroundColor: '#de5454'
 	},
 	confirmClearButtonYes: {
-		backgroundColor: '#64b5f6'
+		backgroundColor: '#0df5e3'
 	},
 	optionsContainer: {
-		padding: 20
+		padding: 20,
+		backgroundColor: '#201A30',
+		flex: 1
 	},
-	optionsButtonText: {
+	removeAllButtonText: {
+		fontSize: 16,
+		color: '#FFF'
+	},
+	hideAllButtonText: {
 		fontSize: 16
+	},
+	fingerprintProtectButtonText: {
+		fontSize: 16
+	},
+	fingerprintProtectButtonTextTip: {
+		fontSize: 10
 	}
-  })
-  
+})

@@ -9,7 +9,7 @@ export const ModalHeader = ({ title, handleClose }: ModalHeaderProps) => {
 			<Text style={styles.addFormHeaderTitle}>{title}</Text>
 
 			<TouchableOpacity onPress={handleClose}>
-				<Feather name="x" size={30} />
+				<Feather name="x" size={30} color="#FFF" />
 			</TouchableOpacity>
 		</View>
 	)
@@ -17,7 +17,8 @@ export const ModalHeader = ({ title, handleClose }: ModalHeaderProps) => {
 
 const styles = StyleSheet.create({
 	addFormHeaderTitle: {
-		fontSize: 24
+		fontSize: 24,
+		color: '#FFF'
 	},
 	addFormHeader: {
 		flexDirection: 'row',

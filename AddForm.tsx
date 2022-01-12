@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { StyleSheet, TextInput, TouchableOpacity, View, Text, ToastAndroid, ScrollView } from 'react-native'
+import { StyleSheet, TextInput, TouchableOpacity, View, Text, ToastAndroid, ScrollView, Image } from 'react-native'
 import { Feather } from '@expo/vector-icons'
 import Checkbox from 'expo-checkbox'
 import AsyncStorage from '@react-native-async-storage/async-storage'
@@ -12,7 +12,7 @@ import { StoredPasswords, AddFormProps} from './types'
 import { PasswordTypes } from './types'
 
 export const AddForm = ({ handleCloseAddForm, reload }: AddFormProps) => {
-	const [appType, setAppType] = useState('')
+	const [appType, setAppType] = useState(PasswordTypes.LOGIN_PASSWORD)
 	const [appTitle, setAppTitle] = useState('')
 	const [appUsername, setAppUsername] = useState('')
 	const [appPassword, setAppPassword] = useState('')
@@ -79,6 +79,8 @@ export const AddForm = ({ handleCloseAddForm, reload }: AddFormProps) => {
 						onValueChange={setAppType}
 						style={styles.inputPicker}
 						mode="dropdown"
+						dropdownIconColor="#FFF"
+						itemStyle={{ backgroundColor: 'red' }}
 					>
 						{Object.values(PasswordTypes).map(type => (
 							<Picker.Item key={type} label={type} value={type} style={styles.inputPickerItem} />
@@ -92,16 +94,30 @@ export const AddForm = ({ handleCloseAddForm, reload }: AddFormProps) => {
 					style={styles.inputText}
 					placeholder="Nome do serviço (ex.: GMail, Nubank)"
 					visible-password={showPassword}
+					placeholderTextColor="#808080"
 				/>
 
 				{appType !== PasswordTypes.PASSWORD_ONLY && (
-					<TextInput 
-						onChangeText={setAppLink}
-						value={appLink}
-						style={styles.inputText}
-						placeholder={appType === PasswordTypes.LOGIN_PASSWORD ? 'Link de acesso' : 'Host (IP ou domínio)'}
-						autoCapitalize="none"
-					/>
+					<View style={styles.appLinkContainer}>
+						<TextInput 
+							onChangeText={setAppLink}
+							value={appLink}
+							style={{
+								...styles.inputText,
+								...styles.inputTextLink
+							}}
+							placeholder={appType === PasswordTypes.LOGIN_PASSWORD ? 'Link de acesso' : 'Host (IP ou domínio)'}
+							autoCapitalize="none"
+							placeholderTextColor="#808080"
+						/>
+
+						<Image 
+							source={{
+								uri: `https://s2.googleusercontent.com/s2/favicons?domain_url=https://${appLink}`
+							}} 
+							style={styles.appLogoImage}
+						/>
+					</View>
 				)}
 
 				{(appType === PasswordTypes.SSH || appType === PasswordTypes.FTP) && (
@@ -111,6 +127,7 @@ export const AddForm = ({ handleCloseAddForm, reload }: AddFormProps) => {
 						style={styles.inputText}
 						placeholder="Porta"
 						keyboardType="numeric"
+						placeholderTextColor="#808080"
 					/>
 				)}
 
@@ -122,6 +139,7 @@ export const AddForm = ({ handleCloseAddForm, reload }: AddFormProps) => {
 						placeholder={appType === PasswordTypes.LOGIN_PASSWORD ? 'Login' : 'Usuário'}
 						keyboardType="email-address"
 						autoCapitalize="none"
+						placeholderTextColor="#808080"
 					/>
 				)}
 		
@@ -135,10 +153,11 @@ export const AddForm = ({ handleCloseAddForm, reload }: AddFormProps) => {
 						}}
 						placeholder="Senha"
 						secureTextEntry={!showPassword}
+						placeholderTextColor="#808080"
 					/>
 
 					<TouchableOpacity onPress={() => { setShowPassword(!showPassword) }}>
-						<Feather name={showPassword ? 'eye-off' : 'eye'} size={24} style={styles.togglePasswordVisibilityIcon} />
+						<Feather name={showPassword ? 'eye-off' : 'eye'} size={24} color="#FFF" style={styles.togglePasswordVisibilityIcon} />
 					</TouchableOpacity>
 				</View>
 
@@ -147,7 +166,7 @@ export const AddForm = ({ handleCloseAddForm, reload }: AddFormProps) => {
 						<Checkbox
 							value={app2FA}
 							onValueChange={setApp2FA}
-							color={app2FA ? '#4caf50' : undefined}
+							color={app2FA ? '#38304C' : undefined}
 							style={styles.check2faCheckbox}
 						/>
 
@@ -181,26 +200,9 @@ const styles = StyleSheet.create({
 	list: {
 	  paddingHorizontal: 20
 	},
-	fabContainer: {
-	  right: 30,
-	  bottom: 30,
-	  position: 'absolute'
-	},
-	fab: {
-	  backgroundColor: 'gold',
-	  width: 60,
-	  height: 60,
-	  borderRadius: 30,
-	  justifyContent: 'center',
-	  alignItems: 'center',
-	  shadowColor: 'rgba(0, 0, 0, 0.1)',
-	  shadowOpacity: 0.8,
-	  elevation: 6,
-	  shadowRadius: 15 ,
-	  shadowOffset : { width: 1, height: 13}
-	},
 	addFormContainer: {
-	  padding: 20
+	  padding: 20,
+	  backgroundColor: '#201A30'
 	},
 	passwordContainer: {
 	  flexDirection: 'row',
@@ -215,24 +217,42 @@ const styles = StyleSheet.create({
 		borderWidth: 1,
 		borderRadius: 4,
 		marginBottom: 20,
-		paddingHorizontal: 8
+		paddingHorizontal: 8,
+		borderColor: '#FFF'
 	},
 	inputPicker: {
-		padding: 30
+		padding: 30,
+		color: '#fff'
 	},
 	inputPickerItem: {
 		fontSize: 18
 	},
 	inputText: {
 	  borderWidth: 1,
+	  borderColor: '#FFF',
 	  fontSize: 18,
 	  padding: 16,
 	  marginBottom: 20,
 	  borderRadius: 4,
-	  width: '100%'
+	  width: '100%',
+	  color: '#FFF'
+	},
+	inputTextLink: {
+		paddingRight: 56
 	},
 	inputTextPassword: {
 	  width: '88%'
+	},
+	appLinkContainer: {
+		flexDirection: 'row'
+	}, 
+	appLogoImage: {
+		width: 26,
+		height: 26,
+		position: 'relative',
+		left: -40,
+		top: 18,
+		borderRadius: 2
 	},
 	check2FAContainer: {
 		alignItems: 'center',
@@ -245,12 +265,13 @@ const styles = StyleSheet.create({
 	},
 	check2FAText: {
 		fontSize: 16,
-		marginLeft: 10
+		marginLeft: 10,
+		color: '#FFF'
 	},
 	btnSave: {
 	  flexDirection: 'row',
-	  backgroundColor: '#4caf50',
-	  borderRadius: 4,
+	  backgroundColor: '#0df5e3',
+	  borderRadius: 30,
 	  padding: 16,
 	  justifyContent: 'center',
 	  marginBottom: 50
