@@ -9,36 +9,43 @@ import { ItemProps, StoredPasswords, StoredPassword } from './types'
 import { GlobalContext } from './contexts/GlobalContext'
 
 export const Item = ({ item, reload }: ItemProps) => {
-	const { handleToggleVisibility, fingerprintProtectState, handleFingerprintAuthentication } = useContext(GlobalContext)
+	const {
+		handleToggleVisibility,
+		fingerprintProtectState,
+		handleFingerprintAuthentication,
+		togglePrepareToDelete
+	} = useContext(GlobalContext)
 	
-	const [showConfirmDelete, setShowConfirmDelete] = useState(false)
-
-	function handlePress(item: StoredPassword) {
+	async function handleOpenItem(item: StoredPassword) {
 		if(fingerprintProtectState && !item.visible) {
-			handleFingerprintAuthentication()
+			await handleFingerprintAuthentication(() => {
+				handleToggleVisibility(item.id)
+			})
+		} else {
+			handleToggleVisibility(item.id)
 		}
-		
-		handleToggleVisibility(item.id)
 	}
 
-	function handleConfirmDelete() {
-		setShowConfirmDelete(!showConfirmDelete)
+	function handlePrepareToDelete(item: StoredPassword) {
+		togglePrepareToDelete(item)
 	}
 
-	async function handleDelete(id: number) {
-		let currentPasswordsString = await AsyncStorage.getItem('@my_pass_passwords')
+	async function handleDelete(item: StoredPassword) {
+		await handleFingerprintAuthentication(async () => {
+			let currentPasswordsString = await AsyncStorage.getItem('@my_pass_passwords')
 
-		let currentPasswords = (JSON.parse((currentPasswordsString as string)) as StoredPasswords)
-
-		currentPasswords = currentPasswords.filter(p => p.id !== id)
-
-		currentPasswordsString = JSON.stringify(currentPasswords)
-
-		await AsyncStorage.setItem('@my_pass_passwords', currentPasswordsString)
-
-		ToastAndroid.show('A senha foi removida com segurança.', ToastAndroid.SHORT)
-
-		reload()
+			let currentPasswords = (JSON.parse((currentPasswordsString as string)) as StoredPasswords)
+	
+			currentPasswords = currentPasswords.filter(p => p.id !== item.id)
+	
+			currentPasswordsString = JSON.stringify(currentPasswords)
+	
+			await AsyncStorage.setItem('@my_pass_passwords', currentPasswordsString)
+	
+			ToastAndroid.show('A senha foi removida com segurança.', ToastAndroid.SHORT)
+	
+			reload()
+		})
 	}
 
 	async function handleCopyToClipboard(text: string) {
@@ -59,9 +66,9 @@ export const Item = ({ item, reload }: ItemProps) => {
 
 	return (
 		<Pressable
-			style={{...styles.item, backgroundColor: showConfirmDelete ? '#421212' : item.visible ? '#38304D' : 'transparent'}}
-			onPress={() => { handlePress(item) }}
-			onLongPress={handleConfirmDelete}
+			style={{...styles.item, backgroundColor: item.preparedToDelete ? '#421212' : item.visible ? '#38304D' : 'transparent'}}
+			onPress={() => { handleOpenItem(item) }}
+			onLongPress={() => { handlePrepareToDelete(item) }}
 		>
 			<View style={styles.header}>
 				<View style={styles.appTitle}>
@@ -86,8 +93,8 @@ export const Item = ({ item, reload }: ItemProps) => {
 					</Text>
 				</View>
 
-				{showConfirmDelete ? (
-					<TouchableOpacity onPress={() => { handleDelete(item.id) }}>
+				{item.preparedToDelete ? (
+					<TouchableOpacity onPress={() => { handleDelete(item) }}>
 						<Feather name="trash" size={24} color="#FFF" />
 					</TouchableOpacity>
 				) : (

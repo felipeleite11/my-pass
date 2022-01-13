@@ -46,7 +46,8 @@ export const AddForm = ({ handleCloseAddForm, reload }: AddFormProps) => {
 				link: appLink,
 				'2fa': app2FA,
 				port: appPort,
-				visible: false
+				visible: false,
+				preparedToDelete: false
 			})
 
 			currentPasswordsString = JSON.stringify(currentPasswords)
@@ -184,25 +185,10 @@ export const AddForm = ({ handleCloseAddForm, reload }: AddFormProps) => {
 }
 
 const styles = StyleSheet.create({
-	container: {
-	  flex: 1,
-	  alignItems: 'center',
-	  justifyContent: 'center',
-	  borderStyle: 'solid',
-	  borderWidth: 1,
-	  borderColor: 'red'
-	},
-	content: {
-	  flex: 1,
-	  width: '100%',
-	  paddingTop: 50
-	},
-	list: {
-	  paddingHorizontal: 20
-	},
 	addFormContainer: {
 	  padding: 20,
-	  backgroundColor: '#201A30'
+	  backgroundColor: '#201A30',
+	  flex: 1
 	},
 	passwordContainer: {
 	  flexDirection: 'row',

@@ -15,24 +15,23 @@ export default function({ children }: ContextProps) {
 	const [showConfirmClear, setShowConfirmClear] = useState<boolean>(false)
 	const [fingerprintProtectState, setFingerprintProtectState] = useState<boolean|null>(null)
 	const [showFingerprintModal, setShowFingerprintModal] = useState<boolean>(true)
-	// const [theme, setTheme] = useState<'dark'|'light'>('dark')
 
-	// async function loadTheme() {
-	// 	const themeName = (await AsyncStorage.getItem('@my_pass_theme')) || 'dark'
+	async function handleFingerprintAuthentication(callback: () => void, login = false) {
+		console.log('Waiting fingerprint authentication...')
 
-	// 	setTheme(themeName as 'light'|'dark')
-	// }
-
-	async function handleFingerprintAuthentication(login = false) {
 		setShowFingerprintModal(true)
 
-		// const fingerprintSupported = await LocalAuthentication.authenticateAsync()
+		const fingerprintSupported = await LocalAuthentication.hasHardwareAsync()
 
-		// const availableFingerprints = await LocalAuthentication.isEnrolledAsync()
+		const hasAvailableFingerprints = await LocalAuthentication.isEnrolledAsync()
 
-		// if(!fingerprintSupported || !availableFingerprints) {
-		// 	await LocalAuthentication.cancelAuthenticate()
-		// }
+		if(!fingerprintSupported || !hasAvailableFingerprints) {
+			setShowFingerprintModal(false)
+
+			callback()
+
+			return
+		}
 
 		const authResult = await LocalAuthentication.authenticateAsync({
 			promptMessage: login ? 'Login com impressão digital' : 'Confirme sua identidade',
@@ -40,9 +39,13 @@ export default function({ children }: ContextProps) {
 		})
 
 		if(authResult.success) {
-			setShowFingerprintModal(false)	
+			console.log('Authentication successful!')
+
+			setShowFingerprintModal(false)
+
+			callback()
 		} else {
-			alert('Falha na autenticação.')
+			ToastAndroid.show('Autenticação cancelada!', ToastAndroid.SHORT)
 		}
 	}
 
@@ -150,10 +153,34 @@ export default function({ children }: ContextProps) {
 		setShowFingerprintModal(false)
 	}
 
-	useEffect(() => {
-		// loadTheme()
+	async function togglePrepareToDelete(item: StoredPassword) {
+		console.log(`Setting prepareToDelete state of "${item.title}" to ${!item.preparedToDelete}`)
 
-		handleFingerprintAuthentication(true)
+		const currentPasswords = [
+			...passwordList.filter(password => password.id !== item.id),
+			{
+				...item,
+				preparedToDelete: item.preparedToDelete ? !item.preparedToDelete : true
+			}
+		]
+
+		currentPasswords.sort((a, b) => {
+			if(a.title < b.title) {
+			  	return -1
+			}
+			if(a.title > b.title) {
+			  	return 1
+			}
+			return 0
+		})
+
+		setPasswordList(currentPasswords)
+	}
+
+	useEffect(() => {
+		console.log('START ===============================')
+
+		// handleFingerprintAuthentication(() => {}, true)
 
 		loadPasswordList()
 		
@@ -186,7 +213,8 @@ export default function({ children }: ContextProps) {
 				setShowOptions,
 				fingerprintProtectState,
 				handleToggleFingerprintProtect,
-				showFingerprintModal
+				showFingerprintModal,
+				togglePrepareToDelete
 			}}
 		>
 			{children}

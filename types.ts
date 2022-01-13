@@ -23,6 +23,7 @@ export interface StoredPassword {
 	'2fa': boolean
 	port: string
 	visible: boolean
+	preparedToDelete: boolean
 }
 
 export interface StoredPasswords extends Array<StoredPassword>{}
@@ -44,9 +45,9 @@ export interface GlobalContextProps {
 	setShowOptions: React.Dispatch<React.SetStateAction<boolean>>
 	fingerprintProtectState: boolean|null
 	handleToggleFingerprintProtect(): void
-	handleFingerprintAuthentication(): void
+	handleFingerprintAuthentication(callback: () => void, login?: boolean): void
 	showFingerprintModal: boolean
-	// theme: string
+	togglePrepareToDelete(item: StoredPassword): Promise<void>
 }
 
 export interface AddFormProps {

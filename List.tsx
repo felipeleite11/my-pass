@@ -220,48 +220,6 @@ const styles = StyleSheet.create({
 	  shadowRadius: 15 ,
 	  shadowOffset : { width: 1, height: 13}
 	},
-	addFormHeaderTitle: {
-	  fontSize: 24
-	},
-	addFormHeader: {
-	  flexDirection: 'row',
-	  justifyContent: 'space-between',
-	  padding: 20
-	},
-	addFormContainer: {
-	  padding: 20
-	},
-	passwordContainer: {
-	  flexDirection: 'row',
-	  alignItems: 'center'
-	},
-	togglePasswordVisibilityIcon: {
-	  position: 'relative',
-	  left: 10,
-	  top: -10
-	},
-	inputText: {
-	  borderWidth: 1,
-	  fontSize: 18,
-	  padding: 16,
-	  marginBottom: 20,
-	  borderRadius: 4,
-	  width: '100%'
-	},
-	inputTextPassword: {
-	  width: '88%'
-	},
-	btnSave: {
-	  flexDirection: 'row',
-	  backgroundColor: '#4caf50',
-	  borderRadius: 4,
-	  padding: 16,
-	  justifyContent: 'center'
-	},
-	btnSaveText: {
-	  fontSize: 16,
-	  marginLeft: 8
-	}, 
 	confirmClearContainer: {
 		padding: 20
 	},
