@@ -52,7 +52,7 @@ export const Options = () => {
 				<Text style={styles.fingerprintProtectButtonText}>Proteger senhas com digital</Text>
 
 				<Text style={styles.fingerprintProtectButtonTextTip}>
-					{fingerprintProtectState !== null ? fingerprintProtectState ? 'Habilitado' : 'Desabilitado' : ''}
+					{fingerprintProtectState ? 'Habilitado' : 'Desabilitado'}
 				</Text>
 			</TouchableOpacity>
 		</View>

@@ -57,3 +57,8 @@ export enum PasswordTypes {
 	SSH = 'SSH',
 	FTP = 'FTP'
 }
+
+export interface ValidationResultProps {
+	error?: string
+	success: boolean
+}

@@ -42,12 +42,12 @@ export default function({ children }: ContextProps) {
 		if(authResult.success) {
 			console.log('Authentication successful!')
 
-			setShowFingerprintModal(false)
-
 			callback()
 		} else {
-			ToastAndroid.show('Autenticação cancelada!', ToastAndroid.SHORT)
+			ToastAndroid.show('Ação cancelada!', ToastAndroid.SHORT)
 		}
+
+		setShowFingerprintModal(false)
 	}
 
 	async function loadPasswordList() {
@@ -147,9 +147,17 @@ export default function({ children }: ContextProps) {
 		const fingerprintProtectEnabled = finterprintProtect === 'Y'
 		const updatedState = fingerprintProtectEnabled ? 'N' : 'Y'
 
-		await AsyncStorage.setItem('@my_pass_enable_fingerprint_protect', updatedState)
+		if(fingerprintProtectEnabled) {
+			await handleFingerprintAuthentication(async () => {
+				await AsyncStorage.setItem('@my_pass_enable_fingerprint_protect', updatedState)
 
-		setFingerprintProtectState(updatedState === 'Y')
+				setFingerprintProtectState(updatedState === 'Y')
+			})
+		} else {
+			await AsyncStorage.setItem('@my_pass_enable_fingerprint_protect', updatedState)
+
+			setFingerprintProtectState(updatedState === 'Y')
+		}
 	}
 
 	async function togglePrepareToDelete(item: StoredPassword) {
@@ -183,7 +191,7 @@ export default function({ children }: ContextProps) {
 	useEffect(() => {
 		console.log('START ===============================')
 
-		// handleFingerprintAuthentication(() => {}, true)
+		handleFingerprintAuthentication(() => {}, true)
 
 		loadPasswordList()
 		

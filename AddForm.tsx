@@ -10,6 +10,7 @@ import { ModalHeader } from './ModalHeader'
 import { StoredPasswords } from './types'
 
 import { PasswordTypes } from './types'
+import { validate } from './validation'
 
 import { GlobalContext } from './contexts/GlobalContext'
 
@@ -43,6 +44,26 @@ export const AddForm = () => {
 			const currentPasswords = (JSON.parse(currentPasswordsString) as StoredPasswords)
 
 			const lastId = currentPasswords[currentPasswords.length - 1]?.id || 1
+
+			const newPassword = {
+				id: lastId + 1,
+				type: appType,
+				title: appTitle,
+				password: appPassword,
+				username: appUsername,
+				link: appLink,
+				'2fa': app2FA,
+				port: appPort,
+				visible: false,
+				preparedToDelete: false
+			}
+
+			const validationResult = await validate(newPassword)
+			
+			if(validationResult.error) {
+				ToastAndroid.show(validationResult.error, ToastAndroid.SHORT)
+				return
+			}
 
 			currentPasswords.push({
 				id: lastId + 1,
