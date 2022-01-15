@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="./assets/adaptive-icon-2.png" width="140px" />
+  <img src="./assets/adaptive-icon.png" width="140px" />
 </p>
 
 <h1 align="center">My pass</h1>
@@ -10,9 +10,11 @@
 
 Sample preview running the app:
 
-<img src="./assets/demos/3.jpg" width="200px" />
-<img src="./assets/demos/2.jpg" width="200px" />
-<img src="./assets/demos/1.jpg" width="200px" />
+<div style="display: flex; gap: 0 10px">
+  <img src="./assets/demos/3.jpg" width="200px" />
+  <img src="./assets/demos/2.jpg" width="200px" />
+  <img src="./assets/demos/1.jpg" width="200px" />
+</div>
 
 <br/>
 
