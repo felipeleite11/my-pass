@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react'
+import React, { useContext } from 'react'
 import { StyleSheet, Text, View, TouchableOpacity, Pressable, ToastAndroid, Linking, Image } from 'react-native'
 import { Feather, MaterialIcons, FontAwesome } from '@expo/vector-icons'
 import AsyncStorage from '@react-native-async-storage/async-storage'
@@ -8,12 +8,13 @@ import { ItemProps, StoredPasswords, StoredPassword } from './types'
 
 import { GlobalContext } from './contexts/GlobalContext'
 
-export const Item = ({ item, reload }: ItemProps) => {
+export const Item = ({ item }: ItemProps) => {
 	const {
 		handleToggleVisibility,
 		fingerprintProtectState,
 		handleFingerprintAuthentication,
-		togglePrepareToDelete
+		togglePrepareToDelete,
+		loadPasswordList
 	} = useContext(GlobalContext)
 	
 	async function handleOpenItem(item: StoredPassword) {
@@ -44,7 +45,7 @@ export const Item = ({ item, reload }: ItemProps) => {
 	
 			ToastAndroid.show('A senha foi removida com segurança.', ToastAndroid.SHORT)
 	
-			reload()
+			loadPasswordList()
 		})
 	}
 
@@ -95,10 +96,10 @@ export const Item = ({ item, reload }: ItemProps) => {
 
 				{item.preparedToDelete ? (
 					<TouchableOpacity onPress={() => { handleDelete(item) }}>
-						<Feather name="trash" size={24} color="#FFF" />
+						<Feather name="trash" size={22} color="#FFF" />
 					</TouchableOpacity>
 				) : (
-					<Feather name={item.visible ? 'eye-off' : 'eye'} size={22} color="#FFF" />
+					<Feather name={item.visible ? 'eye-off' : 'eye'} size={21} color="#FFF" />
 				)}
 			</View>
 

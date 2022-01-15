@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useContext, useState } from 'react'
 import { StyleSheet, TextInput, TouchableOpacity, View, Text, ToastAndroid, ScrollView, Image } from 'react-native'
 import { Feather } from '@expo/vector-icons'
 import Checkbox from 'expo-checkbox'
@@ -7,11 +7,18 @@ import { Picker } from '@react-native-picker/picker'
 
 import { ModalHeader } from './ModalHeader'
 
-import { StoredPasswords, AddFormProps} from './types'
+import { StoredPasswords } from './types'
 
 import { PasswordTypes } from './types'
 
-export const AddForm = ({ handleCloseAddForm, reload }: AddFormProps) => {
+import { GlobalContext } from './contexts/GlobalContext'
+
+export const AddForm = () => {
+	const {
+		handleCloseAddForm,
+		loadPasswordList
+	} = useContext(GlobalContext)
+
 	const [appType, setAppType] = useState(PasswordTypes.LOGIN_PASSWORD)
 	const [appTitle, setAppTitle] = useState('')
 	const [appUsername, setAppUsername] = useState('')
@@ -58,7 +65,7 @@ export const AddForm = ({ handleCloseAddForm, reload }: AddFormProps) => {
 
 			ToastAndroid.show('Sua senha foi armazenada com segurança.', ToastAndroid.SHORT)
 
-			reload()
+			loadPasswordList()
 		} catch(e) {
 			alert((e as Error).message)
 		}

@@ -2,11 +2,6 @@ import React from 'react'
 
 export interface ItemProps {
 	item: StoredPassword
-	reload(): void
-}
-
-export interface ListProps {
-	items: StoredPasswords
 }
 
 export interface ContextProps {
@@ -48,11 +43,7 @@ export interface GlobalContextProps {
 	handleFingerprintAuthentication(callback: () => void, login?: boolean): void
 	showFingerprintModal: boolean
 	togglePrepareToDelete(item: StoredPassword): Promise<void>
-}
-
-export interface AddFormProps {
-	handleCloseAddForm(): void
-	reload(): void
+	alertEmptyList(): void
 }
 
 export interface ModalHeaderProps {

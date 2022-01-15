@@ -1,10 +1,11 @@
 import React, { createContext, useEffect, useState } from 'react'
-import { StyleSheet, Modal, Text, ToastAndroid, TouchableOpacity, View } from 'react-native'
+import { Modal, ToastAndroid } from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import * as LocalAuthentication from 'expo-local-authentication'
 
-import { GlobalContextProps, ContextProps, StoredPasswords, StoredPassword } from '../types'  
-import { Ionicons } from '@expo/vector-icons'
+import { GlobalContextProps, ContextProps, StoredPasswords, StoredPassword } from '../types'
+
+import { FingerprintRequired } from '../FingerprintRequired'
 
 export const GlobalContext = createContext<GlobalContextProps>({} as any)
 
@@ -111,16 +112,18 @@ export default function({ children }: ContextProps) {
 	}
 
 	async function handleClearPasswords() {
-		const initialStorageValue = JSON.stringify([])
+		await handleFingerprintAuthentication(async () => {
+			const initialStorageValue = JSON.stringify([])
 
-		await AsyncStorage.setItem('@my_pass_passwords', initialStorageValue)
+			await AsyncStorage.setItem('@my_pass_passwords', initialStorageValue)
 
-		ToastAndroid.show('Todas as suas senhas foram excluídas!', ToastAndroid.LONG)
+			ToastAndroid.show('Todas as suas senhas foram excluídas!', ToastAndroid.LONG)
 
-		setShowConfirmClear(false)
-		setShowOptions(false)
+			setShowConfirmClear(false)
+			setShowOptions(false)
 
-		loadPasswordList()
+			loadPasswordList()
+		})
 	}
 
 	function hideAllPasswords() {
@@ -149,10 +152,6 @@ export default function({ children }: ContextProps) {
 		setFingerprintProtectState(updatedState === 'Y')
 	}
 
-	function handleContinueWithoutFingerprint() {
-		setShowFingerprintModal(false)
-	}
-
 	async function togglePrepareToDelete(item: StoredPassword) {
 		console.log(`Setting prepareToDelete state of "${item.title}" to ${!item.preparedToDelete}`)
 
@@ -175,6 +174,10 @@ export default function({ children }: ContextProps) {
 		})
 
 		setPasswordList(currentPasswords)
+	}
+
+	function alertEmptyList() {
+		alert('Você não possui nenhuma senha cadastrada.')
 	}
 
 	useEffect(() => {
@@ -214,7 +217,8 @@ export default function({ children }: ContextProps) {
 				fingerprintProtectState,
 				handleToggleFingerprintProtect,
 				showFingerprintModal,
-				togglePrepareToDelete
+				togglePrepareToDelete,
+				alertEmptyList
 			}}
 		>
 			{children}
@@ -224,36 +228,9 @@ export default function({ children }: ContextProps) {
 				animationType="slide"
 				onRequestClose={() => { setShowFingerprintModal(false) }}
 			>
-				<View style={styles.fingerprintContainer}>
-					<Text style={styles.fingerprintText}>Acesse com sua impressão digital</Text>
-
-					<Ionicons name="finger-print" size={60} style={styles.fingerprintIcon} color="#FFF" />
-
-					<TouchableOpacity onPress={handleContinueWithoutFingerprint}>
-						<Text style={styles.fingerprintContinueButton}>Pular autenticação</Text>
-					</TouchableOpacity>
-				</View>
+				<FingerprintRequired />
 			</Modal>
 
 		</GlobalContext.Provider>
 	)
 }
-
-const styles = StyleSheet.create({
-	fingerprintContainer: {
-		alignItems: 'center',
-		justifyContent: 'center',
-		flex: 1,
-		backgroundColor: '#201A30'
-	},
-	fingerprintText: {
-		fontSize: 20,
-		color: '#FFF'
-	},
-	fingerprintIcon: {
-		marginVertical: 50
-	},
-	fingerprintContinueButton: {
-		color: '#FFF'
-	}
-})

@@ -4,31 +4,22 @@ import { Feather } from '@expo/vector-icons'
 
 import { Item } from './Item'
 import { AddForm } from './AddForm'
+import { ConfirmClearPasswords } from './ConfirmClearPasswords'
+import { Options } from './Options'
 
 import { GlobalContext } from './contexts/GlobalContext'
-import { ModalHeader } from './ModalHeader'
 
 export const List = () => {
 	const {
 		passwords,
-		loadPasswordList,
 		handleAdd,
 		showAddForm,
 		showConfirmClear,
 		handleCloseAddForm,
 		handleCloseConfirmClearForm,
-		handleConfirmClearPasswords,
-		handleClearPasswords,
-		hideAllPasswords,
 		showOptions,
-		setShowOptions,
-		fingerprintProtectState,
-		handleToggleFingerprintProtect
+		setShowOptions
 	} = useContext(GlobalContext)
-
-	function alertEmptyList() {
-		alert('Você não possui nenhuma senha cadastrada.')
-	}
 
 	return (
 		<>
@@ -45,10 +36,7 @@ export const List = () => {
 					<FlatList 
 						data={passwords}
 						renderItem={({ item }) => 
-							<Item 
-								item={item}
-								reload={loadPasswordList} 
-							/>
+							<Item item={item} />
 						}
 						keyExtractor={item => String(item.id)}
 						contentContainerStyle={styles.list}
@@ -69,102 +57,27 @@ export const List = () => {
 			</TouchableOpacity>
 			
 			<Modal
-				animationType="slide"
 				visible={showAddForm}
 				onRequestClose={handleCloseAddForm}
+				animationType="slide"
 			>
-				<AddForm
-					handleCloseAddForm={handleCloseAddForm}
-					reload={loadPasswordList}
-				/>
+				<AddForm />
 			</Modal>
 
 			<Modal
-				animationType="slide"
 				visible={showOptions}
 				onRequestClose={() => { setShowOptions(false) }}
+				animationType="slide"
 			>
-				<View style={styles.optionsContainer}>
-					<ModalHeader 
-						title="Opções"
-						handleClose={() => { setShowOptions(false) }}
-					/>
-
-					<TouchableOpacity 
-						onPress={passwords.length ? handleConfirmClearPasswords : alertEmptyList}
-						style={{
-							...styles.confirmClearButton,
-							...styles.confirmClearButtonNo
-						}}
-					>
-						<Text style={styles.removeAllButtonText}>Excluir todas as senhas</Text>
-					</TouchableOpacity>
-
-					<TouchableOpacity 
-						onPress={hideAllPasswords}
-						style={{
-							...styles.confirmClearButton,
-							...styles.confirmClearButtonYes
-						}}
-					>
-						<Text style={styles.hideAllButtonText}>Esconder todas as senhas</Text>
-					</TouchableOpacity>
-
-					<TouchableOpacity 
-						onPress={handleToggleFingerprintProtect}
-						style={{
-							...styles.confirmClearButton,
-							backgroundColor: '#f7fa5a'
-						}}
-					>
-						<Text style={styles.fingerprintProtectButtonText}>Proteger senhas com digital</Text>
-
-						<Text style={styles.fingerprintProtectButtonTextTip}>
-							{fingerprintProtectState !== null ? fingerprintProtectState ? 'Habilitado' : 'Desabilitado' : ''}
-						</Text>
-					</TouchableOpacity>
-				</View>
+				<Options />
 			</Modal>
 
 			<Modal
-				animationType="slide"
 				visible={showConfirmClear}
 				onRequestClose={handleCloseConfirmClearForm}
+				animationType="slide"
 			>
-				<View style={styles.confirmClearContainer}>
-					<ModalHeader 
-						title=""
-						handleClose={handleCloseConfirmClearForm}
-					/>
-
-					<View style={styles.confirmClearIconContainer}>
-						<Feather name="alert-triangle" size={70} color="#999" />
-					</View>
-
-					<Text style={styles.confirmClearText}>Deseja realmente excluir TODAS AS SENHAS cadastradas?</Text>
-
-					<View style={styles.confirmClearButtonsContainer}>
-						<TouchableOpacity
-							onPress={handleCloseConfirmClearForm}
-							style={{
-								...styles.confirmClearButton,
-								...styles.confirmClearButtonNo
-							}}
-						>
-							<Text>NÃO</Text>
-						</TouchableOpacity>
-
-						<TouchableOpacity
-							onPress={handleClearPasswords}
-							style={{
-								...styles.confirmClearButton,
-								...styles.confirmClearButtonYes
-							}}
-						>
-							<Text>SIM</Text>
-						</TouchableOpacity>
-					</View>
-				</View>
+				<ConfirmClearPasswords />
 			</Modal>
 		</>
 	)
@@ -219,51 +132,5 @@ const styles = StyleSheet.create({
 	  elevation: 6,
 	  shadowRadius: 15 ,
 	  shadowOffset : { width: 1, height: 13}
-	},
-	confirmClearContainer: {
-		padding: 20
-	},
-	confirmClearIconContainer: {
-		alignItems: 'center'
-	},
-	confirmClearText: {
-		fontSize: 18,
-		marginTop: 14,
-		textAlign: 'center'
-	},
-	confirmClearButtonsContainer: {
-		flexDirection: 'row',
-		justifyContent: 'center'
-	},
-	confirmClearButton: {
-		padding: 18,
-		marginHorizontal: 14,
-		marginTop: 40,
-		borderRadius: 10,
-		alignItems: 'center'
-	},
-	confirmClearButtonNo: {
-		backgroundColor: '#de5454'
-	},
-	confirmClearButtonYes: {
-		backgroundColor: '#0df5e3'
-	},
-	optionsContainer: {
-		padding: 20,
-		backgroundColor: '#201A30',
-		flex: 1
-	},
-	removeAllButtonText: {
-		fontSize: 16,
-		color: '#FFF'
-	},
-	hideAllButtonText: {
-		fontSize: 16
-	},
-	fingerprintProtectButtonText: {
-		fontSize: 16
-	},
-	fingerprintProtectButtonTextTip: {
-		fontSize: 10
 	}
 })
