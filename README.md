@@ -3,7 +3,7 @@
 </p>
 
 <h1 align="center">My pass</h1>
-<p align="center">A small webcam player focused on providing an easy way to add and control your webcam during recordings.</p>
+<p align="center">A password vault to store passwords, like emails, accounts, devices, servers.</p>
 
 
 ## Preview
