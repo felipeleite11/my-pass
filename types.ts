@@ -19,7 +19,6 @@ export interface StoredPassword {
 	port: string
 	visible: boolean
 	preparedToDelete: boolean
-	bottomSpacer?: boolean
 	selected?: boolean
 }
 
@@ -73,7 +72,8 @@ export enum PasswordTypes {
 	LOGIN_PASSWORD = 'Login e senha',
 	PASSWORD_ONLY = 'Apenas senha',
 	SSH = 'SSH',
-	FTP = 'FTP'
+	FTP = 'FTP',
+	SPACER = 'Spacer'
 }
 
 export interface ValidationResultProps {

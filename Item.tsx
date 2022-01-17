@@ -5,7 +5,7 @@ import { Feather, MaterialIcons, FontAwesome } from '@expo/vector-icons'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import * as Clipboard from 'expo-clipboard'
 
-import { ItemProps, StoredPasswords, StoredPassword } from './types'
+import { ItemProps, StoredPasswords, StoredPassword, PasswordTypes } from './types'
 
 import { GlobalContext } from './contexts/GlobalContext'
 import { useState } from 'react'
@@ -85,7 +85,7 @@ export const Item = ({ item }: ItemProps) => {
 		}
 	}, [item])
 
-	if(item.bottomSpacer) {
+	if(item.type === PasswordTypes.SPACER) {
 		return <View style={styles.bottomSpacer} />
 	}
 

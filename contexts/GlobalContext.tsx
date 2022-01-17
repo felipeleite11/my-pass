@@ -3,7 +3,7 @@ import { BackHandler, Modal, ToastAndroid, Alert } from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import * as LocalAuthentication from 'expo-local-authentication'
 
-import { GlobalContextProps, ContextProps, StoredPasswords, StoredPassword } from '../types'
+import { GlobalContextProps, ContextProps, StoredPasswords, StoredPassword, PasswordTypes, Spacer } from '../types'
 
 import { FingerprintRequired } from '../FingerprintRequired'
 
@@ -77,6 +77,21 @@ export default function({ children }: ContextProps) {
 			  	return 1
 			}
 			return 0
+		})
+
+		// Spacer item
+		currentPasswords.push({
+			type: PasswordTypes.SPACER,
+			id: 0,
+			title: '',
+			username: '',
+			password: '',
+			link: '',
+			port: '',
+			'2fa': false,
+			preparedToDelete: false,
+			visible: false,
+			selected: false
 		})
 
 		setPasswordList(currentPasswords)

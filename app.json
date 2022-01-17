@@ -4,11 +4,14 @@
     "slug": "mypass",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/icon-default.png",
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "cover",
       "backgroundColor": "#201A30"
+    },
+    "notification": {
+      "icon": "./assets/icon-default.png"
     },
     "updates": {
       "fallbackToCacheTimeout": 0
@@ -21,7 +24,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/adaptive-icon-default.png",
         "backgroundColor": "#FFFFFF"
       },
       "package": "com.felipeleite.mypass"
