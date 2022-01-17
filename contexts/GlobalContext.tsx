@@ -1,22 +1,29 @@
 import React, { createContext, useEffect, useState } from 'react'
-import { Modal, ToastAndroid } from 'react-native'
+import { BackHandler, Modal, ToastAndroid, Alert } from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import * as LocalAuthentication from 'expo-local-authentication'
 
-import { GlobalContextProps, ContextProps, StoredPasswords, StoredPassword, PasswordTypes } from '../types'
+import { GlobalContextProps, ContextProps, StoredPasswords, StoredPassword } from '../types'
 
 import { FingerprintRequired } from '../FingerprintRequired'
 
 export const GlobalContext = createContext<GlobalContextProps>({} as any)
 
 export default function({ children }: ContextProps) {
-	const [showAddForm, setShowAddForm] = useState<boolean>(false)
 	const [passwordList, setPasswordList] = useState<StoredPasswords>([])
+	const [passwordInEdition, setPasswordInEdition] = useState<StoredPassword|null>(null)
+	
+	const [showAddForm, setShowAddForm] = useState<boolean>(false)
 	const [showOptions, setShowOptions] = useState<boolean>(false)
 	const [showConfirmClear, setShowConfirmClear] = useState<boolean>(false)
-	const [fingerprintProtectState, setFingerprintProtectState] = useState<boolean|null>(null)
 	const [showFingerprintModal, setShowFingerprintModal] = useState<boolean>(true)
+	
+	const [fingerprintProtectState, setFingerprintProtectState] = useState<boolean|null>(null)
+	
+	const [searchText, setSearchText] = useState<string>('')
 	const [searchResult, setSearchResult] = useState<StoredPasswords|null>(null)
+
+	const [isCheckMode, setIsCheckMode] = useState<boolean>(false)
 
 	async function handleFingerprintAuthentication(callback: () => void, login = false) {
 		console.log('Waiting fingerprint authentication...')
@@ -44,6 +51,8 @@ export default function({ children }: ContextProps) {
 			console.log('Authentication successful!')
 
 			callback()
+		} else if(login) {
+			BackHandler.exitApp()
 		} else {
 			ToastAndroid.show('Ação cancelada!', ToastAndroid.SHORT)
 		}
@@ -55,11 +64,11 @@ export default function({ children }: ContextProps) {
 		const currentPasswordsString = await AsyncStorage.getItem('@my_pass_passwords')
 	
 		if(!currentPasswordsString) {
-		  return
+		  	return
 		}
 	
 		const currentPasswords = (JSON.parse(currentPasswordsString) as StoredPasswords)
-	
+
 		currentPasswords.sort((a, b) => {
 			if(a.title < b.title) {
 			  	return -1
@@ -130,10 +139,16 @@ export default function({ children }: ContextProps) {
 	}
 
 	function hideAllPasswords() {
-		setPasswordList(passwordList.map(p => ({
+		console.log('Hidding all passwords')
+
+		const passwordListWitgAllHidden = passwordList.map(p => ({
 			...p,
 			visible: false
-		})))
+		}))
+
+		setPasswordList(passwordListWitgAllHidden)
+
+		setSearchResult(passwordListWitgAllHidden.filter(password => searchResult.map(item => item.id).includes(password.id)))
 
 		setShowOptions(false)
 	}
@@ -163,42 +178,121 @@ export default function({ children }: ContextProps) {
 		}
 	}
 
-	async function togglePrepareToDelete(item: StoredPassword) {
-		console.log(`Setting prepareToDelete state of "${item.title}" to ${!item.preparedToDelete}`)
-
-		const currentPasswords = [
-			...passwordList.filter(password => password.id !== item.id),
-			{
-				...item,
-				preparedToDelete: item.preparedToDelete ? !item.preparedToDelete : true
-			}
-		]
-
-		currentPasswords.sort((a, b) => {
-			if(a.title < b.title) {
-			  	return -1
-			}
-			if(a.title > b.title) {
-			  	return 1
-			}
-			return 0
-		})
-
-		setPasswordList(currentPasswords)
-	}
-
 	function alertEmptyList() {
 		alert('Você não possui nenhuma senha cadastrada.')
 	}
 
 	function handleSearch(search: string) {
+		if(!passwordList.length) {
+			return
+		}
+
+		console.log(`Handling search with "${search}"`)
+
 		const matchedPasswords = passwordList.filter(password => password.title.toLowerCase().indexOf(search.toLowerCase()) >= 0)
 
 		setSearchResult(matchedPasswords)
 	}
 
 	function handleClearSearch() {
+		console.log('Clearing search')
+
 		setSearchResult(passwordList)
+	}
+
+	function handleEditionClose() {
+		setPasswordInEdition(null)
+	}
+
+	async function handleDelete(item: StoredPassword) {
+		await handleFingerprintAuthentication(async () => {
+			let currentPasswordsString = await AsyncStorage.getItem('@my_pass_passwords')
+
+			let currentPasswords = (JSON.parse((currentPasswordsString as string)) as StoredPasswords)
+	
+			currentPasswords = currentPasswords.filter(p => p.id !== item.id)
+	
+			currentPasswordsString = JSON.stringify(currentPasswords)
+	
+			await AsyncStorage.setItem('@my_pass_passwords', currentPasswordsString)
+	
+			ToastAndroid.show('A senha foi removida com segurança.', ToastAndroid.SHORT)
+	
+			handleEditionClose()
+			
+			loadPasswordList()
+		})
+	}
+
+	async function handleUpdate(item: StoredPassword) {
+		await handleFingerprintAuthentication(async () => {
+			await updateItem(item)
+
+			ToastAndroid.show('Sua senha foi atualizada com segurança.', ToastAndroid.SHORT)
+
+			handleEditionClose()
+		
+			loadPasswordList()
+		})
+	}
+
+	async function updateItem(item: StoredPassword) {
+		let currentPasswordsString = await AsyncStorage.getItem('@my_pass_passwords')
+			
+		let currentPasswords = (JSON.parse(currentPasswordsString) as StoredPasswords)
+
+		const itemToUpdate = currentPasswords.find(password => password.id === item.id)
+
+		Object.assign(itemToUpdate, item)
+
+		currentPasswords = [
+			...currentPasswords.filter(password => password.id !== itemToUpdate.id),
+			itemToUpdate
+		]
+
+		currentPasswordsString = JSON.stringify(currentPasswords)
+
+		await AsyncStorage.setItem('@my_pass_passwords', currentPasswordsString)
+
+		loadPasswordList()
+	}
+
+	async function disableCheckMode() {
+		setIsCheckMode(false)
+
+		let currentPasswordsString = await AsyncStorage.getItem('@my_pass_passwords')
+			
+		const currentPasswords = (JSON.parse(currentPasswordsString) as StoredPasswords)
+
+		const noSelecteds = currentPasswords.map(password => ({
+			...password,
+			selected: false
+		}))
+		
+		currentPasswordsString = JSON.stringify(noSelecteds)
+
+		await AsyncStorage.setItem('@my_pass_passwords', currentPasswordsString)
+	}
+
+	async function handleToggleSelectAll(status: boolean) {
+		console.log(`Change select all state to: ${status}`)
+
+		let currentPasswordsString = await AsyncStorage.getItem('@my_pass_passwords')
+			
+		const currentPasswords = (JSON.parse(currentPasswordsString) as StoredPasswords)
+
+		const noSelecteds = currentPasswords.map(password => ({
+			...password,
+			selected: status
+		}))
+		
+		currentPasswordsString = JSON.stringify(noSelecteds)
+
+		await AsyncStorage.setItem('@my_pass_passwords', currentPasswordsString)
+
+		setPasswordList(noSelecteds)
+
+		setSearchResult(noSelecteds)
 	}
 
 	useEffect(() => {
@@ -217,12 +311,31 @@ export default function({ children }: ContextProps) {
 		}
 	}, [showAddForm])
 
+	useEffect(() => {
+		handleSearch(searchText)
+	}, [searchText])
+
+	useEffect(() => {
+		const backAction = () => {
+			disableCheckMode()
+
+		  	return true
+		}
+	
+		const backHandler = BackHandler.addEventListener('hardwareBackPress', backAction)
+	
+		return () => backHandler.remove()
+	}, [])
+
 	return (
 		<GlobalContext.Provider 
 			value={{
 				handleFingerprintAuthentication,
 				passwords: passwordList,
 				setPasswords: setPasswordList,
+				passwordInEdition,
+				setPasswordInEdition,
+				handleEditionClose,
 				showAddForm,
 				showOptions,
 				showConfirmClear,
@@ -238,11 +351,17 @@ export default function({ children }: ContextProps) {
 				fingerprintProtectState,
 				handleToggleFingerprintProtect,
 				showFingerprintModal,
-				togglePrepareToDelete,
+				handleDelete,
+				handleUpdate,
 				alertEmptyList,
-				handleSearch,
 				searchResult,
-				handleClearSearch
+				handleClearSearch,
+				setSearchText,
+				searchText,
+				setIsCheckMode,
+				isCheckMode,
+				updateItem,
+				handleToggleSelectAll
 			}}
 		>
 			{children}

@@ -1,5 +1,6 @@
-import React, { useContext } from 'react'
+import React, { useContext, useEffect } from 'react'
 import { StyleSheet, Text, View, TouchableOpacity, Pressable, ToastAndroid, Linking, Image } from 'react-native'
+import Checkbox from 'expo-checkbox'
 import { Feather, MaterialIcons, FontAwesome } from '@expo/vector-icons'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import * as Clipboard from 'expo-clipboard'
@@ -7,17 +8,23 @@ import * as Clipboard from 'expo-clipboard'
 import { ItemProps, StoredPasswords, StoredPassword } from './types'
 
 import { GlobalContext } from './contexts/GlobalContext'
+import { useState } from 'react'
 
-import defaultIcon from './assets/default-icon.png'
+const defaultIcon = require('./assets/default-icon.png')
 
 export const Item = ({ item }: ItemProps) => {
 	const {
 		handleToggleVisibility,
 		fingerprintProtectState,
 		handleFingerprintAuthentication,
-		togglePrepareToDelete,
-		loadPasswordList
+		loadPasswordList,
+		setPasswordInEdition,
+		setIsCheckMode,
+		isCheckMode,
+		updateItem
 	} = useContext(GlobalContext)
+
+	const [selected, setSelected] = useState(false)
 	
 	async function handleOpenItem(item: StoredPassword) {
 		if(fingerprintProtectState && !item.visible) {
@@ -27,10 +34,6 @@ export const Item = ({ item }: ItemProps) => {
 		} else {
 			handleToggleVisibility(item.id)
 		}
-	}
-
-	function handlePrepareToDelete(item: StoredPassword) {
-		togglePrepareToDelete(item)
 	}
 
 	async function handleDelete(item: StoredPassword) {
@@ -67,25 +70,58 @@ export const Item = ({ item }: ItemProps) => {
 		Linking.openURL(link)
 	}
 
+	function handleSelectItem() {
+		setSelected(!selected)
+
+		updateItem({
+			...item,
+			selected: !selected
+		})
+	}
+
+	useEffect(() => {
+		if(item) {
+			setSelected(item.selected)
+		}
+	}, [item])
+
+	if(item.bottomSpacer) {
+		return <View style={styles.bottomSpacer} />
+	}
+
 	return (
 		<Pressable
 			style={{...styles.item, backgroundColor: item.preparedToDelete ? '#421212' : item.visible ? '#38304D' : 'transparent'}}
-			onPress={() => { handleOpenItem(item) }}
-			onLongPress={() => { handlePrepareToDelete(item) }}
+			onPress={isCheckMode ? null : () => { handleOpenItem(item) }}
+			onLongPress={() => { 
+				setPasswordInEdition(item) 
+				// setIsCheckMode(true)
+			}}
 		>
 			<View style={styles.header}>
 				<View style={styles.appTitle}>
-					{item.link ? (
-						<Image 
-							source={{
-								uri: `https://s2.googleusercontent.com/s2/favicons?domain_url=https://${item.link}`
-							}}
-							style={styles.appLogoImage}
+					{isCheckMode ? (
+						<Checkbox
+							value={selected}
+							onValueChange={handleSelectItem}
+							color={selected ? '#38304C' : undefined}
+							style={styles.checkbox}
 						/>
 					) : (
-						<View style={styles.appLogoImagePlaceholder}>
-							<Image source={defaultIcon} style={styles.appLogoImage} />
-						</View>
+						<>
+							{item.link ? (
+								<Image 
+									source={{
+										uri: `https://s2.googleusercontent.com/s2/favicons?domain_url=https://${item.link}`
+									}}
+									style={styles.appLogoImage}
+								/>
+							) : (
+								<View style={styles.appLogoImagePlaceholder}>
+									<Image source={defaultIcon} style={styles.appLogoImage} />
+								</View>
+							)}
+						</>
 					)}
 
 					<Text 
@@ -98,16 +134,12 @@ export const Item = ({ item }: ItemProps) => {
 					</Text>
 				</View>
 
-				{item.preparedToDelete ? (
-					<TouchableOpacity onPress={() => { handleDelete(item) }}>
-						<Feather name="trash" size={22} color="#FFF" />
-					</TouchableOpacity>
-				) : (
+				{isCheckMode ? null : (
 					<Feather name={item.visible ? 'eye-off' : 'eye'} size={21} color="#FFF" />
 				)}
 			</View>
 
-			{item.visible && (
+			{item.visible && !isCheckMode && (
 				<>
 					{!!item.link && (
 						<View style={styles.dataRow}>
@@ -201,7 +233,8 @@ const styles = StyleSheet.create({
 		justifyContent: 'space-between'
 	},
 	appTitle: {
-		flexDirection: 'row'
+		flexDirection: 'row',
+		alignItems: 'center'
 	},
 	appLogoImage: {
 		width: 22,
@@ -253,6 +286,14 @@ const styles = StyleSheet.create({
 		height: 18,
 		borderRadius: 2,
 		position: 'relative'
+	},
+	bottomSpacer: {
+		height: 100
+	},
+	checkbox: {
+		width: 22,
+		height: 22,
+		marginRight: 8
 	}
 })
   

@@ -1,6 +1,7 @@
 import React, { useContext, useEffect, useRef } from 'react'
 import { StyleSheet, View, FlatList, TouchableOpacity, Modal, Text, Animated } from 'react-native'
 import { Feather } from '@expo/vector-icons'
+import Checkbox from 'expo-checkbox'
 
 import { Item } from './Item'
 import { AddForm } from './AddForm'
@@ -10,9 +11,11 @@ import { Search } from './Search'
 
 import { GlobalContext } from './contexts/GlobalContext'
 import { ModalHeader } from './ModalHeader'
+import { useState } from 'react'
 
 export const List = () => {
 	const {
+		passwords,
 		handleAdd,
 		showAddForm,
 		showConfirmClear,
@@ -20,8 +23,14 @@ export const List = () => {
 		handleCloseConfirmClearForm,
 		showOptions,
 		setShowOptions,
-		searchResult
+		searchResult,
+		passwordInEdition,
+		handleEditionClose,
+		handleToggleSelectAll,
+		isCheckMode
 	} = useContext(GlobalContext)
+
+	const [selectAllStatus, setSelectAllStatus] = useState(false)
 
 	const animation = useRef(new Animated.Value(80)).current
 
@@ -38,6 +47,14 @@ export const List = () => {
 		}
 	}, [searchResult])
 
+	function handleToggleCheckboxSelectAll() {
+		const newStatus = !selectAllStatus
+		
+		handleToggleSelectAll(newStatus)
+
+		setSelectAllStatus(newStatus)
+	}
+
 	return (
 		<View style={styles.container}>
 			<ModalHeader 
@@ -49,16 +66,47 @@ export const List = () => {
 			<Search />
 
 			<View style={styles.content}>
-				{searchResult?.length ? (
-					<FlatList 
-						data={searchResult}
-						renderItem={({ item }) => 
-							<Item item={item} />
-						}
-						keyExtractor={item => String(item.id)}
-					/> 
+				{!!passwords?.length ? (
+					<>
+						{searchResult === null ? (
+							<View style={styles.emptyListContainer}>
+								<Feather name="refresh-cw" size={80} color="#999" />
+
+								<Text style={styles.emptyListText}>Carregando...</Text>
+							</View>
+						) : !!searchResult.length ? (
+							<>
+								{isCheckMode && (
+									<View style={styles.selectAllContainer}>
+										<Checkbox
+											value={selectAllStatus}
+											onValueChange={handleToggleCheckboxSelectAll}
+											color={selectAllStatus ? '#38304C' : undefined}
+											style={styles.checkboxSelectAll}
+										/>
+
+										<Text style={styles.selectAllText}>Selecionar todos</Text>
+									</View>
+								)}
+
+								<FlatList 
+									data={searchResult}
+									renderItem={({ item }) => 
+										<Item item={item} />
+									}
+									keyExtractor={item => String(item.id)}
+								/> 
+							</>
+						) : (
+							<View style={styles.emptyListContainer}>
+								<Feather name="inbox" size={80} color="#999" />
+
+								<Text style={styles.emptyListText}>Nenhum serviço encontrado</Text>
+							</View>
+						)}
+					</>
 				) : (
-					<View style={styles.emptyListTextContainer}>
+					<View style={styles.emptyListContainer}>
 						<Feather name="inbox" size={80} color="#999" />
 
 						<Text style={styles.emptyListText}>Adicione sua primeira senha</Text>
@@ -95,8 +143,13 @@ export const List = () => {
 				visible={showOptions}
 				onRequestClose={() => { setShowOptions(false) }}
 				animationType="slide"
+				transparent
 			>
-				<Options />
+				<View style={styles.popupOverlay}>
+					<View style={styles.popup}>
+						<Options />
+					</View>
+				</View>
 			</Modal>
 
 			<Modal
@@ -105,6 +158,14 @@ export const List = () => {
 				animationType="slide"
 			>
 				<ConfirmClearPasswords />
+			</Modal>
+
+			<Modal
+				visible={!!passwordInEdition}
+				onRequestClose={handleEditionClose}
+				animationType="slide"
+			>
+				<AddForm passwordInEdition={passwordInEdition} />
 			</Modal>
 		</View>
 	)
@@ -119,18 +180,37 @@ const styles = StyleSheet.create({
 	},
 	content: {
 	  	flex: 1,
-	  	marginTop: 24
+	  	marginTop: 24,
+		paddingBottom: 24
+	},
+
+	// Select all
+	selectAllContainer: {
+		flexDirection: 'row',
+		paddingHorizontal: 12,
+		paddingBottom: 8,
+		alignItems: 'center'
+	},
+	checkboxSelectAll: {
+		width: 22,
+		height: 22
+	},
+	selectAllText: {
+		color: '#AAA',
+		marginLeft: 8
 	},
 
 	// Empty list
-	emptyListTextContainer: {
+	emptyListContainer: {
 	  alignItems: 'center',
 	  justifyContent: 'center',
-	  flex: 1
+	  flex: 1,
+	  marginTop: -100
 	},
 	emptyListText: {
-	  fontSize: 18,
-	  color: '#999'
+	  fontSize: 16,
+	  color: '#999',
+	  marginTop: 8
 	},
 
 	// FAB
@@ -151,5 +231,34 @@ const styles = StyleSheet.create({
 	  elevation: 6,
 	  shadowRadius: 15 ,
 	  shadowOffset : { width: 1, height: 13}
+	},
+
+
+	// Popup
+	popupOverlay: {
+		backgroundColor: '#000A',
+		flex: 1
+	},
+	popup: {
+		backgroundColor: '#201A30',
+		marginVertical: 50,
+		marginHorizontal: 20,
+		borderRadius: 10,
+		padding: 20,
+		flex: 1
+	},
+	popupContent: {
+		marginTop: 12,
+		paddingHorizontal: 10,
+		borderWidth: 1,
+		borderColor: '#FFF'
+	},
+	popupHeader: {
+		flexDirection: 'row',
+		justifyContent: 'flex-end'
+	},
+	popupText: {
+		color: '#FFF',
+		fontSize: 50
 	}
 })

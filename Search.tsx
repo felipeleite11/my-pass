@@ -1,23 +1,17 @@
-import React, { useContext, useEffect, useState } from 'react'
+import React, { useContext } from 'react'
 import { View, StyleSheet, TextInput, TouchableOpacity } from 'react-native'
 import { Feather } from '@expo/vector-icons'
 
 import { GlobalContext } from './contexts/GlobalContext'
 
 export const Search = () => {
-	const { handleSearch, handleClearSearch } = useContext(GlobalContext)
-
-	const [searchText, setSearchText] = useState<string>('')
+	const { handleClearSearch, setSearchText, searchText } = useContext(GlobalContext)
 
 	function handleClear() {
 		setSearchText('')
 		
 		handleClearSearch()
 	}
-
-	useEffect(() => {
-		handleSearch(searchText)
-	}, [searchText])
 
 	return (
 		<View style={styles.container}>

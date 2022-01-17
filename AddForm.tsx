@@ -1,4 +1,4 @@
-import { useContext, useState } from 'react'
+import { useContext, useEffect, useState } from 'react'
 import { StyleSheet, TextInput, TouchableOpacity, View, Text, ToastAndroid, ScrollView, Image } from 'react-native'
 import { Feather } from '@expo/vector-icons'
 import Checkbox from 'expo-checkbox'
@@ -7,20 +7,23 @@ import { Picker } from '@react-native-picker/picker'
 
 import { ModalHeader } from './ModalHeader'
 
-import { StoredPasswords } from './types'
+import { AddFormProps, StoredPasswords } from './types'
 
 import { PasswordTypes } from './types'
 import { validate } from './validation'
 
 import { GlobalContext } from './contexts/GlobalContext'
 
-export const AddForm = () => {
+export const AddForm = ({ passwordInEdition }: AddFormProps) => {
 	const {
 		handleCloseAddForm,
-		loadPasswordList
+		loadPasswordList,
+		handleEditionClose,
+		handleDelete,
+		handleUpdate
 	} = useContext(GlobalContext)
 
-	const [appType, setAppType] = useState(PasswordTypes.LOGIN_PASSWORD)
+	const [appType, setAppType] = useState<string>(PasswordTypes.LOGIN_PASSWORD)
 	const [appTitle, setAppTitle] = useState('')
 	const [appUsername, setAppUsername] = useState('')
 	const [appPassword, setAppPassword] = useState('')
@@ -29,7 +32,19 @@ export const AddForm = () => {
 	const [app2FA, setApp2FA] = useState(false)
 	const [showPassword, setShowPassword] = useState(false)
 
-	async function handleAdd() {
+	useEffect(() => {
+		if(passwordInEdition) {
+			setAppType(passwordInEdition.type)
+			setAppTitle(passwordInEdition.title)
+			setAppUsername(passwordInEdition.username)
+			setAppPassword(passwordInEdition.password)
+			setAppLink(passwordInEdition.link)
+			setAppPort(passwordInEdition.port)
+			setApp2FA(passwordInEdition['2fa'])
+		}
+	}, [passwordInEdition])
+
+	async function handleAddItem() {
 		try {
 			let currentPasswordsString = await AsyncStorage.getItem('@my_pass_passwords')
 
@@ -55,7 +70,8 @@ export const AddForm = () => {
 				'2fa': app2FA,
 				port: appPort,
 				visible: false,
-				preparedToDelete: false
+				preparedToDelete: false,
+				selected: false
 			}
 
 			const validationResult = await validate(newPassword)
@@ -92,11 +108,29 @@ export const AddForm = () => {
 		}
 	}
 
+	function handleUpdateItem() {
+		const updated = {
+			id: passwordInEdition.id,
+			type: appType,
+			title: appTitle,
+			password: appPassword,
+			username: appUsername,
+			link: appLink,
+			'2fa': app2FA,
+			port: appPort,
+			visible: false,
+			preparedToDelete: false,
+			selected: false
+		}
+
+		handleUpdate(updated)
+	}
+
 	return (
 		<View style={styles.addFormContainer}>
 			<ModalHeader 
-				title="Adicionar senha"
-				handleClose={handleCloseAddForm}
+				title={passwordInEdition ? 'Alterar senha' : 'Adicionar senha'}
+				handleClose={passwordInEdition ? handleEditionClose : handleCloseAddForm}
 			/>
 
 			<ScrollView showsVerticalScrollIndicator={false}>
@@ -201,10 +235,24 @@ export const AddForm = () => {
 					</View>
 				)}
 
-				<TouchableOpacity style={styles.btnSave} onPress={handleAdd}>
-					<Feather name="save" size={24} />
-					<Text style={styles.btnSaveText}>Salvar senha</Text>
-				</TouchableOpacity>
+				{passwordInEdition ? (
+					<TouchableOpacity style={styles.btnSave} onPress={handleUpdateItem}>
+						<Feather name="save" size={24} />
+						<Text style={styles.btnSaveText}>Salvar as alterações</Text>
+					</TouchableOpacity>
+				) : (
+					<TouchableOpacity style={styles.btnSave} onPress={handleAddItem}>
+						<Feather name="save" size={24} />
+						<Text style={styles.btnSaveText}>Salvar senha</Text>
+					</TouchableOpacity>
+				)}
+
+				{passwordInEdition && (
+					<TouchableOpacity style={styles.btnRemove} onPress={() => { handleDelete(passwordInEdition) }}>
+						<Feather name="trash" size={24} color="#FFF" />
+						<Text style={styles.btnRemoveText}>Remover do dispositivo</Text>
+					</TouchableOpacity>
+				)}
 			</ScrollView>
 		</View>
 	)
@@ -286,11 +334,24 @@ const styles = StyleSheet.create({
 	  borderRadius: 30,
 	  padding: 16,
 	  justifyContent: 'center',
-	  marginBottom: 50
+	  marginBottom: 20
 	},
 	btnSaveText: {
 	  fontSize: 16,
 	  marginLeft: 8
+	},
+	btnRemove: {
+		flexDirection: 'row',
+		backgroundColor: '#de5454',
+		borderRadius: 30,
+		padding: 16,
+		justifyContent: 'center',
+		marginBottom: 50
+	},
+	btnRemoveText: {
+		fontSize: 16,
+		marginLeft: 8,
+		color: '#FFF'
 	}
-  })
+})
   
