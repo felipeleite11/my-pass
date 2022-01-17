@@ -8,6 +8,8 @@ import { ItemProps, StoredPasswords, StoredPassword } from './types'
 
 import { GlobalContext } from './contexts/GlobalContext'
 
+import defaultIcon from './assets/default-icon.png'
+
 export const Item = ({ item }: ItemProps) => {
 	const {
 		handleToggleVisibility,
@@ -81,7 +83,9 @@ export const Item = ({ item }: ItemProps) => {
 							style={styles.appLogoImage}
 						/>
 					) : (
-						<View style={styles.appLogoImagePlaceholder} />
+						<View style={styles.appLogoImagePlaceholder}>
+							<Image source={defaultIcon} style={styles.appLogoImage} />
+						</View>
 					)}
 
 					<Text 
