@@ -44,11 +44,15 @@ export interface GlobalContextProps {
 	showFingerprintModal: boolean
 	togglePrepareToDelete(item: StoredPassword): Promise<void>
 	alertEmptyList(): void
+	handleSearch(search: string): void
+	handleClearSearch(): void
+	searchResult: StoredPasswords|null
 }
 
 export interface ModalHeaderProps {
 	title: string
-	handleClose(): void
+	handleClose?(): void
+	actionIcon?: string
 }
 
 export enum PasswordTypes {

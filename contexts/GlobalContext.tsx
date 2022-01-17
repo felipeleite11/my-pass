@@ -3,7 +3,7 @@ import { Modal, ToastAndroid } from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import * as LocalAuthentication from 'expo-local-authentication'
 
-import { GlobalContextProps, ContextProps, StoredPasswords, StoredPassword } from '../types'
+import { GlobalContextProps, ContextProps, StoredPasswords, StoredPassword, PasswordTypes } from '../types'
 
 import { FingerprintRequired } from '../FingerprintRequired'
 
@@ -16,6 +16,7 @@ export default function({ children }: ContextProps) {
 	const [showConfirmClear, setShowConfirmClear] = useState<boolean>(false)
 	const [fingerprintProtectState, setFingerprintProtectState] = useState<boolean|null>(null)
 	const [showFingerprintModal, setShowFingerprintModal] = useState<boolean>(true)
+	const [searchResult, setSearchResult] = useState<StoredPasswords|null>(null)
 
 	async function handleFingerprintAuthentication(callback: () => void, login = false) {
 		console.log('Waiting fingerprint authentication...')
@@ -70,6 +71,8 @@ export default function({ children }: ContextProps) {
 		})
 
 		setPasswordList(currentPasswords)
+
+		setSearchResult(currentPasswords)
 	}
 
 	function handleAdd() {
@@ -188,14 +191,24 @@ export default function({ children }: ContextProps) {
 		alert('Você não possui nenhuma senha cadastrada.')
 	}
 
+	function handleSearch(search: string) {
+		const matchedPasswords = passwordList.filter(password => password.title.toLowerCase().indexOf(search.toLowerCase()) >= 0)
+
+		setSearchResult(matchedPasswords)
+	}
+
+	function handleClearSearch() {
+		setSearchResult(passwordList)
+	}
+
 	useEffect(() => {
 		console.log('START ===============================')
 
-		handleFingerprintAuthentication(() => {}, true)
-
-		loadPasswordList()
+		handleFingerprintAuthentication(() => {
+			loadPasswordList()
 		
-		loadFingerprintProtectState()
+			loadFingerprintProtectState()
+		}, true)
 	}, [])
 
 	useEffect(() => {
@@ -226,7 +239,10 @@ export default function({ children }: ContextProps) {
 				handleToggleFingerprintProtect,
 				showFingerprintModal,
 				togglePrepareToDelete,
-				alertEmptyList
+				alertEmptyList,
+				handleSearch,
+				searchResult,
+				handleClearSearch
 			}}
 		>
 			{children}

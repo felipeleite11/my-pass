@@ -49,12 +49,13 @@ export const ConfirmClearPasswords = () => {
 
 const styles = StyleSheet.create({
 	container: {
-		padding: 20,
+		paddingHorizontal: 20,
 		backgroundColor: '#201A30',
 		flex: 1
 	},
 	confirmClearIconContainer: {
-		alignItems: 'center'
+		alignItems: 'center',
+		marginTop: 24
 	},
 	confirmClearText: {
 		fontSize: 18,

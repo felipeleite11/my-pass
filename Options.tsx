@@ -61,7 +61,7 @@ export const Options = () => {
 
 const styles = StyleSheet.create({
 	container: {
-		padding: 20,
+		paddingHorizontal: 20,
 		backgroundColor: '#201A30',
 		flex: 1
 	},

@@ -1,45 +1,61 @@
-import React, { useContext } from 'react'
-import { StyleSheet, View, FlatList, TouchableOpacity, Modal, Text } from 'react-native'
+import React, { useContext, useEffect, useRef } from 'react'
+import { StyleSheet, View, FlatList, TouchableOpacity, Modal, Text, Animated } from 'react-native'
 import { Feather } from '@expo/vector-icons'
 
 import { Item } from './Item'
 import { AddForm } from './AddForm'
 import { ConfirmClearPasswords } from './ConfirmClearPasswords'
 import { Options } from './Options'
+import { Search } from './Search'
 
 import { GlobalContext } from './contexts/GlobalContext'
+import { ModalHeader } from './ModalHeader'
 
 export const List = () => {
 	const {
-		passwords,
 		handleAdd,
 		showAddForm,
 		showConfirmClear,
 		handleCloseAddForm,
 		handleCloseConfirmClearForm,
 		showOptions,
-		setShowOptions
+		setShowOptions,
+		searchResult
 	} = useContext(GlobalContext)
 
-	return (
-		<>
-			<View style={styles.header}>
-				<Text style={styles.appTitle}>Minhas senhas</Text>
+	const animation = useRef(new Animated.Value(80)).current
 
-				<TouchableOpacity onPress={() => { setShowOptions(true) }}>
-					<Feather name="more-vertical" size={28} color="#FFF" />
-				</TouchableOpacity>
-			</View>
+	useEffect(() => {
+		if(searchResult) {
+			Animated.timing(
+				animation,
+				{
+					duration: 400,
+					toValue: 0,
+					useNativeDriver: true
+				}
+			).start()
+		}
+	}, [searchResult])
+
+	return (
+		<View style={styles.container}>
+			<ModalHeader 
+				title="Minhas senhas"
+				handleClose={() => { setShowOptions(true) }}
+				actionIcon="more-vertical"
+			/>
+
+			<Search />
 
 			<View style={styles.content}>
-				{passwords.length ? (
+				{searchResult?.length ? (
 					<FlatList 
-						data={passwords}
+						data={searchResult}
 						renderItem={({ item }) => 
 							<Item item={item} />
 						}
 						keyExtractor={item => String(item.id)}
-						contentContainerStyle={styles.list}
 					/> 
 				) : (
 					<View style={styles.emptyListTextContainer}>
@@ -50,11 +66,22 @@ export const List = () => {
 				)}
 			</View>
 
-			<TouchableOpacity onPress={handleAdd} style={styles.fabContainer}>
-				<View style={styles.fab}>
-					<Feather name="plus" size={30} />
-				</View>
-			</TouchableOpacity>
+			<Animated.View 
+				style={{
+					...styles.fabContainer,
+					transform: [
+						{
+							translateX: animation
+						}
+					]
+				}}
+			>
+				<TouchableOpacity onPress={handleAdd}>
+					<View style={styles.fab}>
+						<Feather name="plus" size={30} />
+					</View>
+				</TouchableOpacity>
+			</Animated.View>
 			
 			<Modal
 				visible={showAddForm}
@@ -79,30 +106,23 @@ export const List = () => {
 			>
 				<ConfirmClearPasswords />
 			</Modal>
-		</>
+		</View>
 	)
 }
 
 const styles = StyleSheet.create({
-	appTitle: {
-		fontSize: 26,
-		color: '#FFF'
-		// color: themes[theme as 'dark'|'light'].PRIMARY
-	}, 
-	header: {
-		position: 'absolute',
-		top: 64,
-		flexDirection: 'row',
-		justifyContent: 'space-between',
-		width: '100%',
-		paddingHorizontal: 20
-		// backgroundColor: themes[theme as 'dark'|'light'].BACKGROUND
+	container: {
+		flex: 1,
+		paddingHorizontal: 20,
+		top: 28,
+		width: '100%'
 	},
 	content: {
-	  flex: 1,
-	  width: '100%',
-	  paddingTop: 110
+	  	flex: 1,
+	  	marginTop: 24
 	},
+
+	// Empty list
 	emptyListTextContainer: {
 	  alignItems: 'center',
 	  justifyContent: 'center',
@@ -112,12 +132,11 @@ const styles = StyleSheet.create({
 	  fontSize: 18,
 	  color: '#999'
 	},
-	list: {
-	  paddingHorizontal: 20
-	},
+
+	// FAB
 	fabContainer: {
-	  right: 30,
-	  bottom: 30,
+	  right: 20,
+	  bottom: 50,
 	  position: 'absolute'
 	},
 	fab: {

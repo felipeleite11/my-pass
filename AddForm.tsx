@@ -99,9 +99,7 @@ export const AddForm = () => {
 				handleClose={handleCloseAddForm}
 			/>
 
-			<ScrollView 
-				showsVerticalScrollIndicator={false}
-			>
+			<ScrollView showsVerticalScrollIndicator={false}>
 				<View style={styles.pickerContainer}>
 					<Picker
 						selectedValue={appType}
@@ -214,7 +212,7 @@ export const AddForm = () => {
 
 const styles = StyleSheet.create({
 	addFormContainer: {
-	  padding: 20,
+	  paddingHorizontal: 20,
 	  backgroundColor: '#201A30',
 	  flex: 1
 	},

@@ -3,26 +3,29 @@ import { StyleSheet, Text, TouchableOpacity, View } from "react-native"
 
 import { ModalHeaderProps } from './types'
 
-export const ModalHeader = ({ title, handleClose }: ModalHeaderProps) => {
+export const ModalHeader = ({ title, handleClose, actionIcon = 'x' }: ModalHeaderProps) => {
 	return (
 		<View style={styles.addFormHeader}>
 			<Text style={styles.addFormHeaderTitle}>{title}</Text>
 
-			<TouchableOpacity onPress={handleClose}>
-				<Feather name="x" size={30} color="#FFF" />
-			</TouchableOpacity>
+			{handleClose && (
+				<TouchableOpacity onPress={handleClose}>
+					<Feather name={actionIcon as any} size={30} color="#FFF" />
+				</TouchableOpacity>
+			)}
 		</View>
 	)
 }
 
 const styles = StyleSheet.create({
-	addFormHeaderTitle: {
-		fontSize: 24,
-		color: '#FFF'
-	},
 	addFormHeader: {
 		flexDirection: 'row',
 		justifyContent: 'space-between',
-		paddingBottom: 20
+		paddingBottom: 20,
+		marginTop: 20
+	},
+	addFormHeaderTitle: {
+		fontSize: 24,
+		color: '#FFF'
 	},
 })
