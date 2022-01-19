@@ -79,6 +79,17 @@ export const Item = ({ item }: ItemProps) => {
 		})
 	}
 
+	function handleEnableCheckMode() {
+		setIsCheckMode(true)
+
+		setSelected(true)
+
+		updateItem({
+			...item,
+			selected: true
+		})
+	}
+
 	useEffect(() => {
 		if(item) {
 			setSelected(item.selected)
@@ -91,12 +102,12 @@ export const Item = ({ item }: ItemProps) => {
 
 	return (
 		<Pressable
-			style={{...styles.item, backgroundColor: item.preparedToDelete ? '#421212' : item.visible ? '#38304D' : 'transparent'}}
-			onPress={isCheckMode ? null : () => { handleOpenItem(item) }}
-			onLongPress={() => { 
-				setPasswordInEdition(item) 
-				// setIsCheckMode(true)
-			}}
+			style={{...styles.item, backgroundColor: item.visible ? '#38304D' : 'transparent'}}
+			onPress={isCheckMode ? 
+				handleSelectItem : 
+				() => { handleOpenItem(item) }
+			}
+			onLongPress={handleEnableCheckMode}
 		>
 			<View style={styles.header}>
 				<View style={styles.appTitle}>
@@ -134,7 +145,11 @@ export const Item = ({ item }: ItemProps) => {
 					</Text>
 				</View>
 
-				{isCheckMode ? null : (
+				{isCheckMode ? (
+					<TouchableOpacity onPress={() => { setPasswordInEdition(item) }}>
+						<Feather name="edit" size={21} color="#FFF" />
+					</TouchableOpacity>
+				) : (
 					<Feather name={item.visible ? 'eye-off' : 'eye'} size={21} color="#FFF" />
 				)}
 			</View>

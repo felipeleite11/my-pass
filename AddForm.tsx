@@ -70,7 +70,6 @@ export const AddForm = ({ passwordInEdition }: AddFormProps) => {
 				'2fa': app2FA,
 				port: appPort,
 				visible: false,
-				preparedToDelete: false,
 				selected: false
 			}
 
@@ -90,8 +89,7 @@ export const AddForm = ({ passwordInEdition }: AddFormProps) => {
 				link: appLink,
 				'2fa': app2FA,
 				port: appPort,
-				visible: false,
-				preparedToDelete: false
+				visible: false
 			})
 
 			currentPasswordsString = JSON.stringify(currentPasswords)
@@ -119,7 +117,6 @@ export const AddForm = ({ passwordInEdition }: AddFormProps) => {
 			'2fa': app2FA,
 			port: appPort,
 			visible: false,
-			preparedToDelete: false,
 			selected: false
 		}
 

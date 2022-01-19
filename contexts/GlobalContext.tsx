@@ -3,7 +3,7 @@ import { BackHandler, Modal, ToastAndroid, Alert } from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import * as LocalAuthentication from 'expo-local-authentication'
 
-import { GlobalContextProps, ContextProps, StoredPasswords, StoredPassword, PasswordTypes, Spacer } from '../types'
+import { GlobalContextProps, ContextProps, StoredPasswords, StoredPassword, PasswordTypes } from '../types'
 
 import { FingerprintRequired } from '../FingerprintRequired'
 
@@ -89,7 +89,6 @@ export default function({ children }: ContextProps) {
 			link: '',
 			port: '',
 			'2fa': false,
-			preparedToDelete: false,
 			visible: false,
 			selected: false
 		})
@@ -156,14 +155,14 @@ export default function({ children }: ContextProps) {
 	function hideAllPasswords() {
 		console.log('Hidding all passwords')
 
-		const passwordListWitgAllHidden = passwordList.map(p => ({
+		const passwordListWithAllHidden = passwordList.map(p => ({
 			...p,
 			visible: false
 		}))
 
-		setPasswordList(passwordListWitgAllHidden)
+		setPasswordList(passwordListWithAllHidden)
 
-		setSearchResult(passwordListWitgAllHidden.filter(password => searchResult.map(item => item.id).includes(password.id)))
+		setSearchResult(passwordListWithAllHidden.filter(password => searchResult.map(item => item.id).includes(password.id)))
 
 		setShowOptions(false)
 	}
@@ -231,10 +230,30 @@ export default function({ children }: ContextProps) {
 	
 			await AsyncStorage.setItem('@my_pass_passwords', currentPasswordsString)
 	
-			ToastAndroid.show('A senha foi removida com segurança.', ToastAndroid.SHORT)
+			ToastAndroid.show('A senha foi removida do dispositivo.', ToastAndroid.SHORT)
 	
 			handleEditionClose()
 			
+			loadPasswordList()
+		})
+	}
+
+	async function handleDeleteMultiple() {
+		await handleFingerprintAuthentication(async () => {
+			let currentPasswordsString = await AsyncStorage.getItem('@my_pass_passwords')
+
+			let currentPasswords = (JSON.parse((currentPasswordsString as string)) as StoredPasswords)
+
+			const itemsToRemoveIds = passwordList.filter(item => item.selected).map(item => item.id)
+	
+			currentPasswords = currentPasswords.filter(p => !itemsToRemoveIds.includes(p.id))
+	
+			currentPasswordsString = JSON.stringify(currentPasswords)
+	
+			await AsyncStorage.setItem('@my_pass_passwords', currentPasswordsString)
+	
+			ToastAndroid.show('As senhas selecionadas foram removidas do sipositivo.', ToastAndroid.SHORT)
+	
 			loadPasswordList()
 		})
 	}
@@ -342,6 +361,23 @@ export default function({ children }: ContextProps) {
 		return () => backHandler.remove()
 	}, [])
 
+	useEffect(() => {
+		if(isCheckMode) {
+			console.log('Enable select mode')
+			
+			const passwordListWithAllHidden = passwordList.map(p => ({
+				...p,
+				visible: false
+			}))
+	
+			setPasswordList(passwordListWithAllHidden)
+	
+			setSearchResult(passwordListWithAllHidden.filter(password => searchResult.map(item => item.id).includes(password.id)))
+
+			loadPasswordList()
+		}
+	}, [isCheckMode])
+
 	return (
 		<GlobalContext.Provider 
 			value={{
@@ -367,6 +403,7 @@ export default function({ children }: ContextProps) {
 				handleToggleFingerprintProtect,
 				showFingerprintModal,
 				handleDelete,
+				handleDeleteMultiple,
 				handleUpdate,
 				alertEmptyList,
 				searchResult,

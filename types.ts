@@ -18,7 +18,6 @@ export interface StoredPassword {
 	'2fa': boolean
 	port: string
 	visible: boolean
-	preparedToDelete: boolean
 	selected?: boolean
 }
 
@@ -49,6 +48,7 @@ export interface GlobalContextProps {
 	handleClearSearch(): void
 	handleEditionClose(): void
 	handleDelete(item: StoredPassword): void
+	handleDeleteMultiple(): void
 	handleUpdate(item: StoredPassword): void
 	handleToggleSelectAll(status: boolean): void
 	hideAllPasswords(): void

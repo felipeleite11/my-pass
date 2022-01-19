@@ -26,6 +26,7 @@ export const List = () => {
 		searchResult,
 		passwordInEdition,
 		handleEditionClose,
+		handleDeleteMultiple,
 		handleToggleSelectAll,
 		isCheckMode
 	} = useContext(GlobalContext)
@@ -78,14 +79,22 @@ export const List = () => {
 							<>
 								{isCheckMode && (
 									<View style={styles.selectAllContainer}>
-										<Checkbox
-											value={selectAllStatus}
-											onValueChange={handleToggleCheckboxSelectAll}
-											color={selectAllStatus ? '#38304C' : undefined}
-											style={styles.checkboxSelectAll}
-										/>
+										<View style={styles.selectAllLeftContent}>
+											<Checkbox
+												value={selectAllStatus}
+												onValueChange={handleToggleCheckboxSelectAll}
+												color={selectAllStatus ? '#38304C' : undefined}
+												style={styles.checkboxSelectAll}
+											/>
 
-										<Text style={styles.selectAllText}>Selecionar todos</Text>
+											<Text style={styles.selectAllText}>Selecionar todos</Text>
+										</View>
+
+										{isCheckMode && searchResult.some(item => item.selected) && (
+											<TouchableOpacity style={styles.selectAllRightContent} onPress={handleDeleteMultiple}>
+												<Feather name="trash" size={22} color="#FFF" />
+											</TouchableOpacity>
+										)}
 									</View>
 								)}
 
@@ -96,6 +105,10 @@ export const List = () => {
 									}
 									keyExtractor={item => String(item.id)}
 								/> 
+
+								{isCheckMode && (
+									<Text style={styles.selectionModeTip}>Pressione voltar para sair do modo de seleção</Text>
+								)}
 							</>
 						) : (
 							<View style={styles.emptyListContainer}>
@@ -189,7 +202,14 @@ const styles = StyleSheet.create({
 		flexDirection: 'row',
 		paddingHorizontal: 12,
 		paddingBottom: 8,
-		alignItems: 'center'
+		justifyContent: 'space-between'
+	},
+	selectAllLeftContent: {
+		flexDirection: 'row',
+		alignItems: 'center',
+	},
+	selectAllRightContent: {
+
 	},
 	checkboxSelectAll: {
 		width: 22,
@@ -198,6 +218,11 @@ const styles = StyleSheet.create({
 	selectAllText: {
 		color: '#AAA',
 		marginLeft: 8
+	},
+	selectionModeTip: {
+		color: '#888',
+		paddingVertical: 16,
+		fontSize: 11
 	},
 
 	// Empty list
