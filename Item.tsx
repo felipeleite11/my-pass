@@ -19,7 +19,6 @@ export const Item = ({ item }: ItemProps) => {
 		handleFingerprintAuthentication,
 		loadPasswordList,
 		setPasswordInEdition,
-		setIsCheckMode,
 		isCheckMode,
 		updateItem
 	} = useContext(GlobalContext)
@@ -79,17 +78,6 @@ export const Item = ({ item }: ItemProps) => {
 		})
 	}
 
-	function handleEnableCheckMode() {
-		setIsCheckMode(true)
-
-		setSelected(true)
-
-		updateItem({
-			...item,
-			selected: true
-		})
-	}
-
 	useEffect(() => {
 		if(item) {
 			setSelected(item.selected)
@@ -107,7 +95,9 @@ export const Item = ({ item }: ItemProps) => {
 				handleSelectItem : 
 				() => { handleOpenItem(item) }
 			}
-			onLongPress={handleEnableCheckMode}
+			onLongPress={() => {
+				setPasswordInEdition(item)
+			}}
 		>
 			<View style={styles.header}>
 				<View style={styles.appTitle}>
@@ -145,11 +135,7 @@ export const Item = ({ item }: ItemProps) => {
 					</Text>
 				</View>
 
-				{isCheckMode ? (
-					<TouchableOpacity onPress={() => { setPasswordInEdition(item) }}>
-						<Feather name="edit" size={21} color="#FFF" />
-					</TouchableOpacity>
-				) : (
+				{!isCheckMode && (
 					<Feather name={item.visible ? 'eye-off' : 'eye'} size={21} color="#FFF" />
 				)}
 			</View>

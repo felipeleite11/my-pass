@@ -7,6 +7,8 @@ import { GlobalContextProps, ContextProps, StoredPasswords, StoredPassword, Pass
 
 import { FingerprintRequired } from '../FingerprintRequired'
 
+const ignoreFingerprint = true
+
 export const GlobalContext = createContext<GlobalContextProps>({} as any)
 
 export default function({ children }: ContextProps) {
@@ -26,6 +28,11 @@ export default function({ children }: ContextProps) {
 	const [isCheckMode, setIsCheckMode] = useState<boolean>(false)
 
 	async function handleFingerprintAuthentication(callback: () => void, login = false) {
+		if(ignoreFingerprint) {
+			callback()
+			return
+		}
+			
 		console.log('Waiting fingerprint authentication...')
 
 		setShowFingerprintModal(true)
@@ -167,6 +174,12 @@ export default function({ children }: ContextProps) {
 		setShowOptions(false)
 	}
 
+	function handleToggleCheckMode() {
+		setIsCheckMode(!isCheckMode)
+
+		setShowOptions(false)
+	}
+
 	async function loadFingerprintProtectState() {
 		const finterprintProtect = await AsyncStorage.getItem('@my_pass_enable_fingerprint_protect')
 
@@ -212,6 +225,8 @@ export default function({ children }: ContextProps) {
 		console.log('Clearing search')
 
 		setSearchResult(passwordList)
+
+		loadPasswordList()
 	}
 
 	function handleEditionClose() {
@@ -381,36 +396,41 @@ export default function({ children }: ContextProps) {
 	return (
 		<GlobalContext.Provider 
 			value={{
-				handleFingerprintAuthentication,
 				passwords: passwordList,
-				setPasswords: setPasswordList,
 				passwordInEdition,
+				
+				setPasswords: setPasswordList,
 				setPasswordInEdition,
-				handleEditionClose,
+				setSearchText,
+				setShowOptions,
+				setIsCheckMode,
+
 				showAddForm,
 				showOptions,
 				showConfirmClear,
-				loadPasswordList,
+				showFingerprintModal,
+				
+				handleFingerprintAuthentication,
+				handleEditionClose,
 				handleAdd,
 				handleCloseAddForm,
 				handleCloseConfirmClearForm,
 				handleToggleVisibility,
 				handleConfirmClearPasswords,
 				handleClearPasswords,
-				hideAllPasswords,
-				setShowOptions,
-				fingerprintProtectState,
-				handleToggleFingerprintProtect,
-				showFingerprintModal,
 				handleDelete,
 				handleDeleteMultiple,
 				handleUpdate,
+				handleClearSearch,
+				handleToggleFingerprintProtect,
+				handleToggleCheckMode,
+				
+				loadPasswordList,
+				hideAllPasswords,
+				fingerprintProtectState,
 				alertEmptyList,
 				searchResult,
-				handleClearSearch,
-				setSearchText,
 				searchText,
-				setIsCheckMode,
 				isCheckMode,
 				updateItem,
 				handleToggleSelectAll

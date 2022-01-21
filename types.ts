@@ -51,6 +51,8 @@ export interface GlobalContextProps {
 	handleDeleteMultiple(): void
 	handleUpdate(item: StoredPassword): void
 	handleToggleSelectAll(status: boolean): void
+	handleToggleCheckMode(): void
+	
 	hideAllPasswords(): void
 	alertEmptyList(): void
 	updateItem(item: StoredPassword): void

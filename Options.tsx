@@ -12,7 +12,9 @@ export const Options = () => {
 		setShowOptions,
 		handleToggleFingerprintProtect,
 		fingerprintProtectState,
-		hideAllPasswords
+		hideAllPasswords,
+		handleToggleCheckMode,
+		isCheckMode
 	} = useContext(GlobalContext)
 
 	return (
@@ -23,13 +25,17 @@ export const Options = () => {
 			/>
 
 			<TouchableOpacity 
-				onPress={passwords.length ? handleConfirmClearPasswords : alertEmptyList}
+				onPress={handleToggleFingerprintProtect}
 				style={{
 					...styles.optionButton,
-					...styles.optionButtonRed
+					...styles.optionButtonCyan
 				}}
 			>
-				<Text style={styles.removeAllButtonText}>Excluir todas as senhas</Text>
+				<Text style={styles.buttonText}>Proteger senhas com digital</Text>
+
+				<Text style={styles.fingerprintProtectButtonTextTip}>
+					{fingerprintProtectState ? 'Habilitado' : 'Desabilitado'}
+				</Text>
 			</TouchableOpacity>
 
 			<TouchableOpacity 
@@ -39,21 +45,29 @@ export const Options = () => {
 					...styles.optionButtonCyan
 				}}
 			>
-				<Text style={styles.hideAllButtonText}>Esconder todas as senhas</Text>
+				<Text style={styles.buttonText}>Esconder todas as senhas</Text>
 			</TouchableOpacity>
 
 			<TouchableOpacity 
-				onPress={handleToggleFingerprintProtect}
+				onPress={handleToggleCheckMode}
 				style={{
 					...styles.optionButton,
-					...styles.optionButtonYellow
+					...styles.optionButtonCyan
 				}}
 			>
-				<Text style={styles.fingerprintProtectButtonText}>Proteger senhas com digital</Text>
-
-				<Text style={styles.fingerprintProtectButtonTextTip}>
-					{fingerprintProtectState ? 'Habilitado' : 'Desabilitado'}
+				<Text style={styles.buttonText}>
+					{`${isCheckMode ? 'Desativar' : 'Ativar'} modo seleção`}
 				</Text>
+			</TouchableOpacity>
+
+			<TouchableOpacity 
+				onPress={passwords.length ? handleConfirmClearPasswords : alertEmptyList}
+				style={{
+					...styles.optionButton,
+					...styles.optionButtonRed
+				}}
+			>
+				<Text style={styles.removeAllButtonText}>Excluir todas as senhas</Text>
 			</TouchableOpacity>
 		</View>
 	)
@@ -84,11 +98,9 @@ const styles = StyleSheet.create({
 		fontSize: 16,
 		color: '#FFF'
 	},
-	hideAllButtonText: {
-		fontSize: 16
-	},
-	fingerprintProtectButtonText: {
-		fontSize: 16
+	buttonText: {
+		fontSize: 16,
+		color: '#424242'
 	},
 	fingerprintProtectButtonTextTip: {
 		fontSize: 10
