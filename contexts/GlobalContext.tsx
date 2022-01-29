@@ -3,11 +3,13 @@ import { BackHandler, Modal, ToastAndroid, Alert } from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import * as LocalAuthentication from 'expo-local-authentication'
 
-import { GlobalContextProps, ContextProps, StoredPasswords, StoredPassword, PasswordTypes } from '../types'
+import { GlobalContextProps, ContextProps, StoredPasswords, StoredPassword, PasswordTypes, ThemeProps } from '../types'
 
 import { FingerprintRequired } from '../FingerprintRequired'
 
-const ignoreFingerprint = true
+import { storeTestPasswords } from '../test-passwords'
+
+const ignoreFingerprint = false
 
 export const GlobalContext = createContext<GlobalContextProps>({} as any)
 
@@ -18,7 +20,7 @@ export default function({ children }: ContextProps) {
 	const [showAddForm, setShowAddForm] = useState<boolean>(false)
 	const [showOptions, setShowOptions] = useState<boolean>(false)
 	const [showConfirmClear, setShowConfirmClear] = useState<boolean>(false)
-	const [showFingerprintModal, setShowFingerprintModal] = useState<boolean>(true)
+	const [showFingerprintModal, setShowFingerprintModal] = useState<boolean>(!ignoreFingerprint)
 	
 	const [fingerprintProtectState, setFingerprintProtectState] = useState<boolean|null>(null)
 	
@@ -26,7 +28,7 @@ export default function({ children }: ContextProps) {
 	const [searchResult, setSearchResult] = useState<StoredPasswords|null>(null)
 
 	const [isCheckMode, setIsCheckMode] = useState<boolean>(false)
-
+	
 	async function handleFingerprintAuthentication(callback: () => void, login = false) {
 		if(ignoreFingerprint) {
 			callback()
@@ -94,6 +96,7 @@ export default function({ children }: ContextProps) {
 			username: '',
 			password: '',
 			link: '',
+			database: '',
 			port: '',
 			'2fa': false,
 			visible: false,
@@ -159,17 +162,25 @@ export default function({ children }: ContextProps) {
 		})
 	}
 
-	function hideAllPasswords() {
+	async function hideAllPasswords() {
 		console.log('Hidding all passwords')
 
-		const passwordListWithAllHidden = passwordList.map(p => ({
-			...p,
+		let currentPasswordsString = await AsyncStorage.getItem('@my_pass_passwords')
+			
+		const currentPasswords = (JSON.parse(currentPasswordsString) as StoredPasswords)
+
+		const noVisibles = currentPasswords.map(password => ({
+			...password,
 			visible: false
 		}))
+		
+		currentPasswordsString = JSON.stringify(noVisibles)
 
-		setPasswordList(passwordListWithAllHidden)
+		await AsyncStorage.setItem('@my_pass_passwords', currentPasswordsString)
 
-		setSearchResult(passwordListWithAllHidden.filter(password => searchResult.map(item => item.id).includes(password.id)))
+		setPasswordList(noVisibles)
+
+		setSearchResult(noVisibles.filter(password => searchResult.map(item => item.id).includes(password.id)))
 
 		setShowOptions(false)
 	}
@@ -299,6 +310,16 @@ export default function({ children }: ContextProps) {
 			itemToUpdate
 		]
 
+		currentPasswords.sort((a, b) => {
+			if(a.title < b.title) {
+			  	return -1
+			}
+			if(a.title > b.title) {
+			  	return 1
+			}
+			return 0
+		})
+
 		currentPasswordsString = JSON.stringify(currentPasswords)
 
 		await AsyncStorage.setItem('@my_pass_passwords', currentPasswordsString)
@@ -346,6 +367,8 @@ export default function({ children }: ContextProps) {
 
 	useEffect(() => {
 		console.log('START ===============================')
+
+		// storeTestPasswords()
 
 		handleFingerprintAuthentication(() => {
 			loadPasswordList()
@@ -424,6 +447,7 @@ export default function({ children }: ContextProps) {
 				handleClearSearch,
 				handleToggleFingerprintProtect,
 				handleToggleCheckMode,
+				handleToggleSelectAll,
 				
 				loadPasswordList,
 				hideAllPasswords,
@@ -432,8 +456,7 @@ export default function({ children }: ContextProps) {
 				searchResult,
 				searchText,
 				isCheckMode,
-				updateItem,
-				handleToggleSelectAll
+				updateItem
 			}}
 		>
 			{children}

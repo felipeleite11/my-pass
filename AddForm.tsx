@@ -28,6 +28,7 @@ export const AddForm = ({ passwordInEdition }: AddFormProps) => {
 	const [appUsername, setAppUsername] = useState('')
 	const [appPassword, setAppPassword] = useState('')
 	const [appLink, setAppLink] = useState('')
+	const [appDatabase, setAppDatabase] = useState('')
 	const [appPort, setAppPort] = useState('')
 	const [app2FA, setApp2FA] = useState(false)
 	const [showPassword, setShowPassword] = useState(false)
@@ -67,6 +68,7 @@ export const AddForm = ({ passwordInEdition }: AddFormProps) => {
 				password: appPassword,
 				username: appUsername,
 				link: appLink,
+				database: appDatabase,
 				'2fa': app2FA,
 				port: appPort,
 				visible: false,
@@ -87,6 +89,7 @@ export const AddForm = ({ passwordInEdition }: AddFormProps) => {
 				password: appPassword,
 				username: appUsername,
 				link: appLink,
+				database: appDatabase,
 				'2fa': app2FA,
 				port: appPort,
 				visible: false
@@ -114,6 +117,7 @@ export const AddForm = ({ passwordInEdition }: AddFormProps) => {
 			password: appPassword,
 			username: appUsername,
 			link: appLink,
+			database: appDatabase,
 			'2fa': app2FA,
 			port: appPort,
 			visible: false,
@@ -140,9 +144,11 @@ export const AddForm = ({ passwordInEdition }: AddFormProps) => {
 						dropdownIconColor="#FFF"
 						itemStyle={{ backgroundColor: 'red' }}
 					>
-						{Object.values(PasswordTypes).map(type => (
-							<Picker.Item key={type} label={type} value={type} style={styles.inputPickerItem} />
-						))}
+						{Object.values(PasswordTypes)
+							.filter(type => type !== 'Spacer')
+							.map(type => (
+								<Picker.Item key={type} label={type} value={type} style={styles.inputPickerItem} />
+							))}
 					</Picker>
 				</View>
 
@@ -176,6 +182,17 @@ export const AddForm = ({ passwordInEdition }: AddFormProps) => {
 							style={styles.appLogoImage}
 						/>
 					</View>
+				)}
+
+				{appType === PasswordTypes.DATABASE && (
+					<TextInput 
+						onChangeText={setAppDatabase}
+						value={appDatabase}
+						style={styles.inputText}
+						placeholder="Banco de dados"
+						autoCapitalize="none"
+						placeholderTextColor="#808080"
+					/>
 				)}
 
 				{(appType === PasswordTypes.SSH || appType === PasswordTypes.FTP) && (

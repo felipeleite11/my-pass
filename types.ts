@@ -15,6 +15,7 @@ export interface StoredPassword {
 	password: string
 	username: string
 	link: string
+	database: string
 	'2fa': boolean
 	port: string
 	visible: boolean
@@ -75,6 +76,7 @@ export enum PasswordTypes {
 	PASSWORD_ONLY = 'Apenas senha',
 	SSH = 'SSH',
 	FTP = 'FTP',
+	DATABASE = 'Banco de dados',
 	SPACER = 'Spacer'
 }
 
@@ -85,4 +87,13 @@ export interface ValidationResultProps {
 
 export interface AddFormProps {
 	passwordInEdition?: StoredPassword
+}
+
+export interface ThemeProps {
+	background: string,
+	primary: string,
+	text: string,
+	text_secondary: string,
+	red: string,
+	yellow: string
 }

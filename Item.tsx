@@ -2,10 +2,9 @@ import React, { useContext, useEffect } from 'react'
 import { StyleSheet, Text, View, TouchableOpacity, Pressable, ToastAndroid, Linking, Image } from 'react-native'
 import Checkbox from 'expo-checkbox'
 import { Feather, MaterialIcons, FontAwesome } from '@expo/vector-icons'
-import AsyncStorage from '@react-native-async-storage/async-storage'
 import * as Clipboard from 'expo-clipboard'
 
-import { ItemProps, StoredPasswords, StoredPassword, PasswordTypes } from './types'
+import { ItemProps, StoredPassword, PasswordTypes } from './types'
 
 import { GlobalContext } from './contexts/GlobalContext'
 import { useState } from 'react'
@@ -17,7 +16,6 @@ export const Item = ({ item }: ItemProps) => {
 		handleToggleVisibility,
 		fingerprintProtectState,
 		handleFingerprintAuthentication,
-		loadPasswordList,
 		setPasswordInEdition,
 		isCheckMode,
 		updateItem
@@ -33,24 +31,6 @@ export const Item = ({ item }: ItemProps) => {
 		} else {
 			handleToggleVisibility(item.id)
 		}
-	}
-
-	async function handleDelete(item: StoredPassword) {
-		await handleFingerprintAuthentication(async () => {
-			let currentPasswordsString = await AsyncStorage.getItem('@my_pass_passwords')
-
-			let currentPasswords = (JSON.parse((currentPasswordsString as string)) as StoredPasswords)
-	
-			currentPasswords = currentPasswords.filter(p => p.id !== item.id)
-	
-			currentPasswordsString = JSON.stringify(currentPasswords)
-	
-			await AsyncStorage.setItem('@my_pass_passwords', currentPasswordsString)
-	
-			ToastAndroid.show('A senha foi removida com segurança.', ToastAndroid.SHORT)
-	
-			loadPasswordList()
-		})
 	}
 
 	async function handleCopyToClipboard(text: string) {
@@ -144,7 +124,7 @@ export const Item = ({ item }: ItemProps) => {
 				<>
 					{!!item.link && (
 						<View style={styles.dataRow}>
-							<Feather name="link" size={20} color="#FFF" />
+							<Feather name={item.type === PasswordTypes.LOGIN_PASSWORD || item.type === PasswordTypes.PASSWORD_ONLY ? 'link' : 'server'} size={20} color="#FFF" />
 
 							<View style={styles.hidedDataBox}>
 								<Text style={styles.hidedData}>{item.link}</Text>
@@ -159,6 +139,20 @@ export const Item = ({ item }: ItemProps) => {
 
 							<TouchableOpacity onPress={() => { handleOpenLink(item.link) }}>
 								<Feather name="external-link" size={26} style={styles.copyIcon} color="#FFF" />
+							</TouchableOpacity>
+						</View>
+					)}
+
+					{!!item.database && (
+						<View style={styles.dataRow}>
+							<FontAwesome name="database" size={22} style={{ paddingRight: 1 }} color="#FFF" />
+
+							<View style={styles.hidedDataBox}>
+								<Text style={styles.hidedData}>{item.database}</Text>
+							</View>
+
+							<TouchableOpacity onPress={() => { handleCopyToClipboard(item.database) }}>
+								<Feather name="copy" size={24} style={styles.copyIcon} color="#FFF" />
 							</TouchableOpacity>
 						</View>
 					)}
