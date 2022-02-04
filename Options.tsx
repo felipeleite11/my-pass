@@ -10,8 +10,8 @@ export const Options = () => {
 		handleConfirmClearPasswords,
 		alertEmptyList,
 		setShowOptions,
-		handleToggleFingerprintProtect,
-		fingerprintProtectState,
+		handleToggleProtect,
+		passwordOpenProtectionState,
 		hideAllPasswords,
 		handleToggleCheckMode,
 		isCheckMode
@@ -25,7 +25,7 @@ export const Options = () => {
 			/>
 
 			<TouchableOpacity 
-				onPress={handleToggleFingerprintProtect}
+				onPress={handleToggleProtect}
 				style={{
 					...styles.optionButton,
 					...styles.optionButtonCyan
@@ -34,7 +34,7 @@ export const Options = () => {
 				<Text style={styles.buttonText}>Proteger senhas com digital</Text>
 
 				<Text style={styles.fingerprintProtectButtonTextTip}>
-					{fingerprintProtectState ? 'Habilitado' : 'Desabilitado'}
+					{passwordOpenProtectionState ? 'Habilitado' : 'Desabilitado'}
 				</Text>
 			</TouchableOpacity>
 

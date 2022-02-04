@@ -1,15 +1,16 @@
 import React, { createContext, useEffect, useState } from 'react'
-import { BackHandler, Modal, ToastAndroid, Alert } from 'react-native'
+import { BackHandler, Modal, ToastAndroid } from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import * as LocalAuthentication from 'expo-local-authentication'
 
-import { GlobalContextProps, ContextProps, StoredPasswords, StoredPassword, PasswordTypes, ThemeProps } from '../types'
+import { GlobalContextProps, ContextProps, StoredPasswords, StoredPassword, PasswordTypes, AuthenticationModalData, AuthenticationMethod } from '../types'
 
 import { FingerprintRequired } from '../FingerprintRequired'
+import { PasswordRequired } from '../PasswordRequired'
 
 import { storeTestPasswords } from '../test-passwords'
 
-const ignoreFingerprint = false
+const ignoreInitialAuthentication = false
 
 export const GlobalContext = createContext<GlobalContextProps>({} as any)
 
@@ -20,36 +21,59 @@ export default function({ children }: ContextProps) {
 	const [showAddForm, setShowAddForm] = useState<boolean>(false)
 	const [showOptions, setShowOptions] = useState<boolean>(false)
 	const [showConfirmClear, setShowConfirmClear] = useState<boolean>(false)
-	const [showFingerprintModal, setShowFingerprintModal] = useState<boolean>(!ignoreFingerprint)
+	const [showAuthenticationModal, setShowAuthenticationModal] = useState<boolean>(!ignoreInitialAuthentication)
 	
-	const [fingerprintProtectState, setFingerprintProtectState] = useState<boolean|null>(null)
+	const [passwordOpenProtectionState, setPasswordOpenProtectionState] = useState<boolean|null>(null)
 	
 	const [searchText, setSearchText] = useState<string>('')
 	const [searchResult, setSearchResult] = useState<StoredPasswords|null>(null)
 
 	const [isCheckMode, setIsCheckMode] = useState<boolean>(false)
+
+	const [authenticationMethod, setAuthenticationMethod] = useState<AuthenticationMethod|null>(null)
+	const [authenticationModalData, setAuthenticationModalData] = useState<AuthenticationModalData|null>(null)
 	
+	async function handleAuthenticatedAction(callback: () => void, login = false) {
+		if(!ignoreInitialAuthentication) {
+			setAuthenticationModalData({
+				open: true,
+				method: authenticationMethod,
+				callback: () => {
+					setAuthenticationModalData({
+						open: false
+					})
+
+					callback()
+				}
+			})
+		}
+
+		if(authenticationMethod.name === 'fingerprint') {
+			handleFingerprintAuthentication(callback, login)
+		} else {
+			handlePasswordAuthentication(login)
+		}
+	}
+
 	async function handleFingerprintAuthentication(callback: () => void, login = false) {
-		if(ignoreFingerprint) {
+		if(ignoreInitialAuthentication && login) {
 			callback()
 			return
 		}
 			
-		console.log('Waiting fingerprint authentication...')
-
-		setShowFingerprintModal(true)
-
 		const fingerprintSupported = await LocalAuthentication.hasHardwareAsync()
 
 		const hasAvailableFingerprints = await LocalAuthentication.isEnrolledAsync()
 
 		if(!fingerprintSupported || !hasAvailableFingerprints) {
-			setShowFingerprintModal(false)
-
-			callback()
+			console.log('Fingerprint authentication is not supported...')
 
 			return
 		}
+
+		setShowAuthenticationModal(true)
+
+		console.log('Waiting fingerprint authentication...')
 
 		const authResult = await LocalAuthentication.authenticateAsync({
 			promptMessage: login ? 'Login com impressão digital' : 'Confirme sua identidade',
@@ -66,7 +90,17 @@ export default function({ children }: ContextProps) {
 			ToastAndroid.show('Ação cancelada!', ToastAndroid.SHORT)
 		}
 
-		setShowFingerprintModal(false)
+		setShowAuthenticationModal(false)
+	}
+
+	async function handlePasswordAuthentication(login = false) {
+		setShowAuthenticationModal(true)
+
+		console.log('Waiting password authentication...')
+
+		if(login) {
+			BackHandler.exitApp()
+		}
 	}
 
 	async function loadPasswordList() {
@@ -106,6 +140,24 @@ export default function({ children }: ContextProps) {
 		setPasswordList(currentPasswords)
 
 		setSearchResult(currentPasswords)
+	}
+
+	async function loadAuthenticationMethod() {
+		const authMethodString = await AsyncStorage.getItem('@my_pass_auth_method')
+	
+		if(!authMethodString) {
+			const defaultAuthMethod: AuthenticationMethod = {
+				name: 'password'
+			}
+
+			await AsyncStorage.setItem('@my_pass_auth_method', JSON.stringify(defaultAuthMethod))
+		}
+	
+		const authMethod = (JSON.parse(authMethodString) as AuthenticationMethod)
+
+		console.log(`${authMethod.name.toUpperCase()} is the default authentication method`)
+
+		setAuthenticationMethod(authMethod)
 	}
 
 	function handleAdd() {
@@ -148,7 +200,7 @@ export default function({ children }: ContextProps) {
 	}
 
 	async function handleClearPasswords() {
-		await handleFingerprintAuthentication(async () => {
+		await handleAuthenticatedAction(async () => {
 			const initialStorageValue = JSON.stringify([])
 
 			await AsyncStorage.setItem('@my_pass_passwords', initialStorageValue)
@@ -191,28 +243,28 @@ export default function({ children }: ContextProps) {
 		setShowOptions(false)
 	}
 
-	async function loadFingerprintProtectState() {
-		const finterprintProtect = await AsyncStorage.getItem('@my_pass_enable_fingerprint_protect')
+	async function loadPasswordOpenProtectionState() {
+		const finterprintProtect = await AsyncStorage.getItem('@my_pass_enable_protect')
 
-		setFingerprintProtectState(finterprintProtect === 'Y')
+		setPasswordOpenProtectionState(finterprintProtect === 'Y')
 	}
 
-	async function handleToggleFingerprintProtect() {
-		const finterprintProtect = await AsyncStorage.getItem('@my_pass_enable_fingerprint_protect')
+	async function handleToggleProtect() {
+		const protect = await AsyncStorage.getItem('@my_pass_enable_protect')
 
-		const fingerprintProtectEnabled = finterprintProtect === 'Y'
-		const updatedState = fingerprintProtectEnabled ? 'N' : 'Y'
+		const protectEnabled = protect === 'Y'
+		const updatedState = protectEnabled ? 'N' : 'Y'
 
-		if(fingerprintProtectEnabled) {
-			await handleFingerprintAuthentication(async () => {
-				await AsyncStorage.setItem('@my_pass_enable_fingerprint_protect', updatedState)
+		if(protectEnabled) {
+			await handleAuthenticatedAction(async () => {
+				await AsyncStorage.setItem('@my_pass_enable_protect', updatedState)
 
-				setFingerprintProtectState(updatedState === 'Y')
+				setPasswordOpenProtectionState(updatedState === 'Y')
 			})
 		} else {
-			await AsyncStorage.setItem('@my_pass_enable_fingerprint_protect', updatedState)
+			await AsyncStorage.setItem('@my_pass_enable_protect', updatedState)
 
-			setFingerprintProtectState(updatedState === 'Y')
+			setPasswordOpenProtectionState(updatedState === 'Y')
 		}
 	}
 
@@ -225,7 +277,9 @@ export default function({ children }: ContextProps) {
 			return
 		}
 
-		console.log(`Handling search with "${search}"`)
+		if(search) {
+			console.log(`Handling search with "${search}"`)
+		}
 
 		const matchedPasswords = passwordList.filter(password => password.title.toLowerCase().indexOf(search.toLowerCase()) >= 0)
 
@@ -366,16 +420,20 @@ export default function({ children }: ContextProps) {
 	}
 
 	useEffect(() => {
-		console.log('START ===============================')
+		if(!authenticationMethod) {
+			return
+		}
 
 		// storeTestPasswords()
 
-		handleFingerprintAuthentication(() => {
+		handleAuthenticatedAction(() => {
 			loadPasswordList()
 		
-			loadFingerprintProtectState()
+			loadPasswordOpenProtectionState()
+
+			setShowAuthenticationModal(false)
 		}, true)
-	}, [])
+	}, [authenticationMethod])
 
 	useEffect(() => {
 		if(showAddForm) {
@@ -416,6 +474,16 @@ export default function({ children }: ContextProps) {
 		}
 	}, [isCheckMode])
 
+	useEffect(() => {
+		console.log('START ===============================')
+
+		loadAuthenticationMethod()
+	}, [])
+
+	if(!authenticationMethod) {
+		return <></>
+	}
+
 	return (
 		<GlobalContext.Provider 
 			value={{
@@ -431,9 +499,9 @@ export default function({ children }: ContextProps) {
 				showAddForm,
 				showOptions,
 				showConfirmClear,
-				showFingerprintModal,
+				showAuthenticationModal,
 				
-				handleFingerprintAuthentication,
+				handleAuthenticatedAction,
 				handleEditionClose,
 				handleAdd,
 				handleCloseAddForm,
@@ -445,13 +513,13 @@ export default function({ children }: ContextProps) {
 				handleDeleteMultiple,
 				handleUpdate,
 				handleClearSearch,
-				handleToggleFingerprintProtect,
+				handleToggleProtect,
 				handleToggleCheckMode,
 				handleToggleSelectAll,
 				
 				loadPasswordList,
 				hideAllPasswords,
-				fingerprintProtectState,
+				passwordOpenProtectionState,
 				alertEmptyList,
 				searchResult,
 				searchText,
@@ -461,13 +529,19 @@ export default function({ children }: ContextProps) {
 		>
 			{children}
 
-			<Modal
-				visible={showFingerprintModal}
-				animationType="slide"
-				onRequestClose={() => { setShowFingerprintModal(false) }}
-			>
-				<FingerprintRequired />
-			</Modal>
+			{authenticationModalData && (
+				<Modal
+					visible={authenticationModalData.open}
+					animationType="slide"
+					onRequestClose={() => { setAuthenticationModalData(null) }}
+				>
+					{authenticationModalData.method?.name === 'fingerprint' ? (
+						<FingerprintRequired />
+					) : (
+						<PasswordRequired callback={authenticationModalData.callback} />
+					)}
+				</Modal>
+			)}
 
 		</GlobalContext.Provider>
 	)

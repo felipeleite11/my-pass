@@ -26,26 +26,30 @@ export interface StoredPasswords extends Array<StoredPassword>{}
 
 export interface GlobalContextProps {
 	passwords: StoredPasswords
-	setPasswords: React.Dispatch<React.SetStateAction<StoredPasswords>>
 	passwordInEdition: StoredPassword
-	setPasswordInEdition: React.Dispatch<React.SetStateAction<StoredPassword>>
-
+	passwordOpenProtectionState: boolean|null
+	isCheckMode: boolean
+	searchText: string
+	searchResult: StoredPasswords|null
 	showAddForm: boolean
 	showOptions: boolean
 	showConfirmClear: boolean
-	fingerprintProtectState: boolean|null
-	showFingerprintModal: boolean
+	showAuthenticationModal: boolean
+	
+	setPasswordInEdition: React.Dispatch<React.SetStateAction<StoredPassword>>
+	setPasswords: React.Dispatch<React.SetStateAction<StoredPasswords>>
 	setShowOptions: React.Dispatch<React.SetStateAction<boolean>>
+	setIsCheckMode: React.Dispatch<React.SetStateAction<boolean>>
+	setSearchText: React.Dispatch<React.SetStateAction<string>>
 
-	loadPasswordList(): void
 	handleAdd(): void
 	handleCloseAddForm(): void
 	handleCloseConfirmClearForm(): void
 	handleToggleVisibility(id: number): void
 	handleConfirmClearPasswords(): void
 	handleClearPasswords(): void
-	handleToggleFingerprintProtect(): void
-	handleFingerprintAuthentication(callback: () => void, login?: boolean): void
+	handleToggleProtect(): void
+	handleAuthenticatedAction(callback: () => void, login?: boolean): void
 	handleClearSearch(): void
 	handleEditionClose(): void
 	handleDelete(item: StoredPassword): void
@@ -54,21 +58,20 @@ export interface GlobalContextProps {
 	handleToggleSelectAll(status: boolean): void
 	handleToggleCheckMode(): void
 	
+	loadPasswordList(): void
 	hideAllPasswords(): void
 	alertEmptyList(): void
 	updateItem(item: StoredPassword): void
-	isCheckMode: boolean
-	setIsCheckMode: React.Dispatch<React.SetStateAction<boolean>>
-
-	setSearchText: React.Dispatch<React.SetStateAction<string>>
-	searchText: string
-	searchResult: StoredPasswords|null
 }
 
 export interface ModalHeaderProps {
 	title: string
 	handleClose?(): void
 	actionIcon?: string
+}
+
+export interface PasswordRequiredProps {
+	callback() : void
 }
 
 export enum PasswordTypes {
@@ -96,4 +99,14 @@ export interface ThemeProps {
 	text_secondary: string,
 	red: string,
 	yellow: string
+}
+
+export interface AuthenticationMethod {
+	name: string
+}
+
+export interface AuthenticationModalData {
+	open: boolean
+	method?: AuthenticationMethod
+	callback?(): void
 }

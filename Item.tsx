@@ -14,8 +14,8 @@ const defaultIcon = require('./assets/default-icon.png')
 export const Item = ({ item }: ItemProps) => {
 	const {
 		handleToggleVisibility,
-		fingerprintProtectState,
-		handleFingerprintAuthentication,
+		passwordOpenProtectionState,
+		handleAuthenticatedAction,
 		setPasswordInEdition,
 		isCheckMode,
 		updateItem
@@ -24,8 +24,8 @@ export const Item = ({ item }: ItemProps) => {
 	const [selected, setSelected] = useState(false)
 	
 	async function handleOpenItem(item: StoredPassword) {
-		if(fingerprintProtectState && !item.visible) {
-			await handleFingerprintAuthentication(() => {
+		if(passwordOpenProtectionState && !item.visible) {
+			await handleAuthenticatedAction(() => {
 				handleToggleVisibility(item.id)
 			})
 		} else {
