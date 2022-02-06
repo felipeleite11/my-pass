@@ -1,7 +1,9 @@
 import React, { useContext } from 'react'
-import { Text, View, StyleSheet, TouchableOpacity } from 'react-native'
+import { Text, ScrollView, StyleSheet, TouchableOpacity } from 'react-native'
+import { Feather } from '@expo/vector-icons'
 
 import { GlobalContext } from './contexts/GlobalContext'
+
 import { ModalHeader } from './ModalHeader'
 
 export const Options = () => {
@@ -14,11 +16,13 @@ export const Options = () => {
 		passwordOpenProtectionState,
 		hideAllPasswords,
 		handleToggleCheckMode,
-		isCheckMode
+		isCheckMode,
+		authenticationMethod,
+		handleToggleAuthenticationMethod
 	} = useContext(GlobalContext)
 
 	return (
-		<View style={styles.container}>
+		<ScrollView style={styles.container}>
 			<ModalHeader 
 				title="Opções"
 				handleClose={() => { setShowOptions(false) }}
@@ -27,14 +31,28 @@ export const Options = () => {
 			<TouchableOpacity 
 				onPress={handleToggleProtect}
 				style={{
-					...styles.optionButton,
+					...styles.optionButtonWithTip,
 					...styles.optionButtonCyan
 				}}
 			>
-				<Text style={styles.buttonText}>Proteger senhas com digital</Text>
+				<Text style={styles.buttonText}>Exigir autenticação para ver as senhas</Text>
 
-				<Text style={styles.fingerprintProtectButtonTextTip}>
+				<Text style={styles.buttonTextTip}>
 					{passwordOpenProtectionState ? 'Habilitado' : 'Desabilitado'}
+				</Text>
+			</TouchableOpacity>
+
+			<TouchableOpacity 
+				onPress={handleToggleAuthenticationMethod}
+				style={{
+					...styles.optionButtonWithTip,
+					...styles.optionButtonCyan
+				}}
+			>
+				<Text style={styles.buttonText}>Mudar método de autenticação</Text>
+
+				<Text style={styles.buttonTextTip}>
+					{`Atual: ${authenticationMethod.name === 'password' ? 'Senha' : 'Biometria'}`}
 				</Text>
 			</TouchableOpacity>
 
@@ -69,19 +87,27 @@ export const Options = () => {
 			>
 				<Text style={styles.removeAllButtonText}>Excluir todas as senhas</Text>
 			</TouchableOpacity>
-		</View>
+		</ScrollView>
 	)
 }
 
 const styles = StyleSheet.create({
 	container: {
-		paddingHorizontal: 20,
+		paddingHorizontal: 12,
+		paddingBottom: 50,
 		backgroundColor: '#201A30',
 		flex: 1
 	},
 	optionButton: {
 		padding: 18,
-		marginTop: 40,
+		marginTop: 20,
+		borderRadius: 10,
+		justifyContent: 'center',
+		flexDirection: 'row'
+	},
+	optionButtonWithTip: {
+		padding: 18,
+		marginTop: 20,
 		borderRadius: 10,
 		alignItems: 'center'
 	},
@@ -98,11 +124,16 @@ const styles = StyleSheet.create({
 		fontSize: 16,
 		color: '#FFF'
 	},
+	buttonContentIcon: {
+		marginRight: 6
+	},
 	buttonText: {
 		fontSize: 16,
-		color: '#424242'
+		color: '#424242',
+		width: '100%',
+		textAlign: 'center'
 	},
-	fingerprintProtectButtonTextTip: {
+	buttonTextTip: {
 		fontSize: 10
 	}
 })

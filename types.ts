@@ -29,12 +29,12 @@ export interface GlobalContextProps {
 	passwordInEdition: StoredPassword
 	passwordOpenProtectionState: boolean|null
 	isCheckMode: boolean
+	authenticationMethod: AuthenticationMethod|null
 	searchText: string
 	searchResult: StoredPasswords|null
 	showAddForm: boolean
 	showOptions: boolean
 	showConfirmClear: boolean
-	showAuthenticationModal: boolean
 	
 	setPasswordInEdition: React.Dispatch<React.SetStateAction<StoredPassword>>
 	setPasswords: React.Dispatch<React.SetStateAction<StoredPasswords>>
@@ -57,6 +57,7 @@ export interface GlobalContextProps {
 	handleUpdate(item: StoredPassword): void
 	handleToggleSelectAll(status: boolean): void
 	handleToggleCheckMode(): void
+	handleToggleAuthenticationMethod(): void
 	
 	loadPasswordList(): void
 	hideAllPasswords(): void

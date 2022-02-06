@@ -1,5 +1,5 @@
 import React, { createContext, useEffect, useState } from 'react'
-import { BackHandler, Modal, ToastAndroid } from 'react-native'
+import { View, BackHandler, Modal, ToastAndroid } from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import * as LocalAuthentication from 'expo-local-authentication'
 
@@ -21,7 +21,6 @@ export default function({ children }: ContextProps) {
 	const [showAddForm, setShowAddForm] = useState<boolean>(false)
 	const [showOptions, setShowOptions] = useState<boolean>(false)
 	const [showConfirmClear, setShowConfirmClear] = useState<boolean>(false)
-	const [showAuthenticationModal, setShowAuthenticationModal] = useState<boolean>(!ignoreInitialAuthentication)
 	
 	const [passwordOpenProtectionState, setPasswordOpenProtectionState] = useState<boolean|null>(null)
 	
@@ -32,6 +31,8 @@ export default function({ children }: ContextProps) {
 
 	const [authenticationMethod, setAuthenticationMethod] = useState<AuthenticationMethod|null>(null)
 	const [authenticationModalData, setAuthenticationModalData] = useState<AuthenticationModalData|null>(null)
+
+	const [started, setStarted] = useState(false)
 	
 	async function handleAuthenticatedAction(callback: () => void, login = false) {
 		if(!ignoreInitialAuthentication) {
@@ -71,8 +72,6 @@ export default function({ children }: ContextProps) {
 			return
 		}
 
-		setShowAuthenticationModal(true)
-
 		console.log('Waiting fingerprint authentication...')
 
 		const authResult = await LocalAuthentication.authenticateAsync({
@@ -90,12 +89,12 @@ export default function({ children }: ContextProps) {
 			ToastAndroid.show('Ação cancelada!', ToastAndroid.SHORT)
 		}
 
-		setShowAuthenticationModal(false)
+		setAuthenticationModalData({
+			open: false
+		})
 	}
 
 	async function handlePasswordAuthentication(login = false) {
-		setShowAuthenticationModal(true)
-
 		console.log('Waiting password authentication...')
 
 		if(login) {
@@ -193,6 +192,22 @@ export default function({ children }: ContextProps) {
 		})
 
 		setPasswordList(currentPasswords)
+	}
+
+	async function handleToggleAuthenticationMethod() {
+		const authMethodString = await AsyncStorage.getItem('@my_pass_auth_method')
+	
+		const authMethod = (JSON.parse(authMethodString) as AuthenticationMethod)
+
+		const newAuthMethod: AuthenticationMethod = {
+			name: authMethod.name === 'password' ? 'fingerprint' : 'password'
+		}
+
+		await AsyncStorage.setItem('@my_pass_auth_method', JSON.stringify(newAuthMethod))
+
+		setAuthenticationMethod(newAuthMethod)
+
+		console.log(`Authentication method changed to ${newAuthMethod.name.toUpperCase()}`)
 	}
 
 	function handleConfirmClearPasswords() {
@@ -420,18 +435,22 @@ export default function({ children }: ContextProps) {
 	}
 
 	useEffect(() => {
-		if(!authenticationMethod) {
+		if(!authenticationMethod || started) {
 			return
 		}
 
 		// storeTestPasswords()
 
 		handleAuthenticatedAction(() => {
+			setStarted(true)
+
 			loadPasswordList()
 		
 			loadPasswordOpenProtectionState()
 
-			setShowAuthenticationModal(false)
+			setAuthenticationModalData({
+				open: false
+			})
 		}, true)
 	}, [authenticationMethod])
 
@@ -481,7 +500,7 @@ export default function({ children }: ContextProps) {
 	}, [])
 
 	if(!authenticationMethod) {
-		return <></>
+		return <View></View>
 	}
 
 	return (
@@ -489,6 +508,7 @@ export default function({ children }: ContextProps) {
 			value={{
 				passwords: passwordList,
 				passwordInEdition,
+				authenticationMethod,
 				
 				setPasswords: setPasswordList,
 				setPasswordInEdition,
@@ -499,7 +519,6 @@ export default function({ children }: ContextProps) {
 				showAddForm,
 				showOptions,
 				showConfirmClear,
-				showAuthenticationModal,
 				
 				handleAuthenticatedAction,
 				handleEditionClose,
@@ -516,6 +535,7 @@ export default function({ children }: ContextProps) {
 				handleToggleProtect,
 				handleToggleCheckMode,
 				handleToggleSelectAll,
+				handleToggleAuthenticationMethod,
 				
 				loadPasswordList,
 				hideAllPasswords,
@@ -529,19 +549,21 @@ export default function({ children }: ContextProps) {
 		>
 			{children}
 
-			{authenticationModalData && (
-				<Modal
-					visible={authenticationModalData.open}
-					animationType="slide"
-					onRequestClose={() => { setAuthenticationModalData(null) }}
-				>
-					{authenticationModalData.method?.name === 'fingerprint' ? (
-						<FingerprintRequired />
-					) : (
-						<PasswordRequired callback={authenticationModalData.callback} />
-					)}
-				</Modal>
-			)}
+			<Modal
+				visible={!!authenticationModalData?.open}
+				animationType="slide"
+				onRequestClose={() => { setAuthenticationModalData(null) }}
+			>
+				{authenticationModalData && (
+					<>
+						{authenticationModalData?.method?.name === 'fingerprint' ? (
+							<FingerprintRequired />
+						) : (
+							<PasswordRequired callback={authenticationModalData?.callback} />
+						)}
+					</>
+				)}
+			</Modal>
 
 		</GlobalContext.Provider>
 	)
