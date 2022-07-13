@@ -127,7 +127,7 @@ export const List = () => {
 				)}
 			</View>
 
-			<Animated.View 
+			{/* <Animated.View 
 				style={{
 					...styles.fabContainer,
 					transform: [
@@ -136,13 +136,15 @@ export const List = () => {
 						}
 					]
 				}}
-			>
+			> */}
+			<View style={styles.fabContainer}>
 				<TouchableOpacity onPress={handleAdd}>
 					<View style={styles.fab}>
 						<Feather name="plus" size={30} />
 					</View>
 				</TouchableOpacity>
-			</Animated.View>
+			</View>
+			{/* </Animated.View> */}
 			
 			<Modal
 				visible={showAddForm}
